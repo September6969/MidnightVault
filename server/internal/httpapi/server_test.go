@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/September6969/MidnightVault/server/internal/store"
@@ -45,5 +46,45 @@ func TestProtectedEndpointRequiresToken(t *testing.T) {
 
 	if response.Code != http.StatusUnauthorized {
 		t.Fatalf("期望状态码 401，实际为 %d", response.Code)
+	}
+}
+
+func TestUnconfiguredTokenDoesNotAcceptRemoteEmptyBearer(t *testing.T) {
+	database, err := store.Open(filepath.Join(t.TempDir(), "test.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+
+	handler := New(database, slog.New(slog.NewTextHandler(io.Discard, nil)), "")
+	request := httptest.NewRequest(http.MethodPost, "/v1/devices", nil)
+	request.RemoteAddr = "203.0.113.10:12345"
+	request.Header.Set("Authorization", "Bearer ")
+	response := httptest.NewRecorder()
+
+	handler.ServeHTTP(response, request)
+
+	if response.Code != http.StatusUnauthorized {
+		t.Fatalf("期望状态码 401，实际为 %d", response.Code)
+	}
+}
+
+func TestTaskReportRejectsNegativeCounts(t *testing.T) {
+	database, err := store.Open(filepath.Join(t.TempDir(), "test.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+
+	handler := New(database, slog.New(slog.NewTextHandler(io.Discard, nil)), "secret")
+	body := `{"taskId":"task-a","deviceId":"device-a","status":"running","successCount":-1,"skippedCount":0,"failedCount":0,"totalBytes":0}`
+	request := httptest.NewRequest(http.MethodPost, "/v1/tasks/report", strings.NewReader(body))
+	request.Header.Set("Authorization", "Bearer secret")
+	response := httptest.NewRecorder()
+
+	handler.ServeHTTP(response, request)
+
+	if response.Code != http.StatusBadRequest {
+		t.Fatalf("期望状态码 400，实际为 %d", response.Code)
 	}
 }

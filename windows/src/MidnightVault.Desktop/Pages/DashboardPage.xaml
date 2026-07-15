@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Name="DashboardRootPage"
+    x:Class="MidnightVault.Desktop.Pages.DashboardPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    SizeChanged="DashboardPage_SizeChanged">
+
+    <Grid>
+        <ScrollViewer
+            x:Name="DashboardScrollViewer"
+            HorizontalContentAlignment="Center"
+            HorizontalScrollBarVisibility="Disabled"
+            HorizontalScrollMode="Disabled"
+            VerticalScrollBarVisibility="Auto">
+            <Grid
+            Width="{Binding ActualWidth, ElementName=DashboardScrollViewer}"
+            MaxWidth="1000"
+            Padding="32,28,32,40"
+            HorizontalAlignment="Stretch"
+            RowSpacing="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <Grid ColumnSpacing="16" RowSpacing="8">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Spacing="6">
+                    <TextBlock FontSize="30" FontWeight="SemiBold" Text="备份概览" />
+                    <TextBlock
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        Text="两台手机 · 每天北京时间 00:00 · 增量备份 · 只增不删"
+                        TextWrapping="Wrap" />
+                </StackPanel>
+
+                <Button
+                    x:Name="HeaderActionButton"
+                    Grid.Column="1"
+                    HorizontalAlignment="Right"
+                    AutomationProperties.HelpText="启动一次手动扫描和上传任务"
+                    Click="BackupNow_Click"
+                    Content="立即备份" />
+            </Grid>
+
+            <InfoBar
+                x:Name="SetupInfoBar"
+                Grid.Row="1"
+                IsClosable="False"
+                IsOpen="True"
+                Message="先选择外接硬盘，再为两台 Android 手机完成配对。"
+                Severity="Informational"
+                Title="等待初始设置" />
+
+            <Grid Grid.Row="2" ColumnSpacing="12" RowSpacing="12">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition x:Name="MetricColumnTwo" Width="*" />
+                    <ColumnDefinition x:Name="MetricColumnThree" Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Border
+                    Padding="20"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8">
+                    <StackPanel Spacing="8">
+                        <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="下一次任务" />
+                        <TextBlock x:Name="NextRunText" FontSize="22" FontWeight="SemiBold" />
+                        <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="北京时间 · 错过后自动补传" TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+
+                <Border
+                    x:Name="DeviceCard"
+                    Grid.Column="1"
+                    Padding="20"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8">
+                    <StackPanel Spacing="8">
+                        <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="已配对设备" />
+                        <TextBlock FontSize="22" FontWeight="SemiBold" Text="0 / 2" />
+                        <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="两台设备可并行上传" TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+
+                <Border
+                    x:Name="DriveCard"
+                    Grid.Column="2"
+                    Padding="20"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8">
+                    <StackPanel Spacing="8">
+                        <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="备份盘" />
+                        <TextBlock FontSize="22" FontWeight="SemiBold" Text="未选择" />
+                        <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="将按卷唯一 ID 绑定" TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <Grid Grid.Row="3" ColumnSpacing="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock FontSize="20" FontWeight="SemiBold" Text="最近任务" />
+                <TextBlock
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                    Text="最近 30 天" />
+            </Grid>
+
+            <Border
+                Grid.Row="4"
+                Padding="28"
+                Background="{ThemeResource LayerFillColorDefaultBrush}"
+                CornerRadius="8">
+                <StackPanel HorizontalAlignment="Center" Spacing="8">
+                    <FontIcon
+                        FontSize="28"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        Glyph="&#xE823;" />
+                    <TextBlock HorizontalAlignment="Center" FontWeight="SemiBold" Text="尚无备份记录" />
+                    <TextBlock
+                        MaxWidth="420"
+                        HorizontalAlignment="Center"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        Text="完成硬盘设置和手机配对后，每次扫描、上传与校验结果都会显示在这里。"
+                        TextAlignment="Center"
+                        TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+            </Grid>
+        </ScrollViewer>
+    </Grid>
+</Page>

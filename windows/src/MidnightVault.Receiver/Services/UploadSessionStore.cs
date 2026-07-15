@@ -17,6 +17,7 @@ public sealed class UploadSessionStore(
 
     public async Task<StartUploadResponse> StartAsync(UploadDescriptor descriptor, CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(descriptor);
         _ = pathPolicy.ResolveDestination(_options.RootPath, descriptor);
 
         var uploadId = Guid.NewGuid().ToString("N");
@@ -26,6 +27,8 @@ public sealed class UploadSessionStore(
         var manifest = new UploadManifest(descriptor, _options.ChunkSizeBytes);
         await using var stream = File.Create(Path.Combine(sessionDirectory, "session.json"));
         await JsonSerializer.SerializeAsync(stream, manifest, JsonOptions, cancellationToken);
+        await stream.FlushAsync(cancellationToken);
+        stream.Flush(flushToDisk: true);
 
         var chunkCount = descriptor.Size == 0
             ? 0
@@ -46,24 +49,31 @@ public sealed class UploadSessionStore(
         var destination = Path.Combine(sessionDirectory, $"{index:D8}.chunk");
         var temporary = $"{destination}.uploading";
 
-        await using (var output = new FileStream(temporary, FileMode.Create, FileAccess.Write, FileShare.None, 1024 * 1024, true))
+        try
         {
-            await content.CopyToAsync(output, cancellationToken);
-            await output.FlushAsync(cancellationToken);
-            if (output.Length != expectedLength)
+            await using (var output = new FileStream(temporary, FileMode.Create, FileAccess.Write, FileShare.None, 1024 * 1024, true))
             {
-                throw new InvalidDataException($"分块长度应为 {expectedLength} 字节，实际为 {output.Length} 字节。 ");
+                await content.CopyToAsync(output, cancellationToken);
+                await output.FlushAsync(cancellationToken);
+                output.Flush(flushToDisk: true);
+                if (output.Length != expectedLength)
+                {
+                    throw new InvalidDataException($"分块长度应为 {expectedLength} 字节，实际为 {output.Length} 字节。 ");
+                }
             }
-        }
 
-        var actualSha256 = await FileIntegrity.ComputeSha256Async(temporary, cancellationToken);
-        if (!actualSha256.Equals(expectedSha256, StringComparison.OrdinalIgnoreCase))
+            var actualSha256 = await FileIntegrity.ComputeSha256Async(temporary, cancellationToken);
+            if (!actualSha256.Equals(expectedSha256, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidDataException("分块 SHA-256 校验失败。 ");
+            }
+
+            File.Move(temporary, destination, overwrite: true);
+        }
+        finally
         {
             File.Delete(temporary);
-            throw new InvalidDataException("分块 SHA-256 校验失败。 ");
         }
-
-        File.Move(temporary, destination, overwrite: true);
     }
 
     public async Task<CompleteUploadResponse> CompleteAsync(string uploadId, CancellationToken cancellationToken)
@@ -77,6 +87,7 @@ public sealed class UploadSessionStore(
             var existingHash = await FileIntegrity.ComputeSha256Async(destination, cancellationToken);
             if (existingHash.Equals(manifest.File.Sha256, StringComparison.OrdinalIgnoreCase))
             {
+                File.SetLastWriteTimeUtc(destination, manifest.File.OriginalModifiedAt.UtcDateTime);
                 return CreateCompleteResponse(destination, manifest.File);
             }
 
@@ -84,40 +95,54 @@ public sealed class UploadSessionStore(
         }
 
         var temporary = $"{destination}.assembling";
-        await using (var output = new FileStream(temporary, FileMode.Create, FileAccess.Write, FileShare.None, 1024 * 1024, true))
+        try
         {
-            var chunkCount = manifest.File.Size == 0
-                ? 0
-                : checked((int)Math.Ceiling((double)manifest.File.Size / manifest.ChunkSizeBytes));
-
-            for (var index = 0; index < chunkCount; index++)
+            await using (var output = new FileStream(temporary, FileMode.Create, FileAccess.Write, FileShare.None, 1024 * 1024, true))
             {
-                var chunkPath = Path.Combine(GetSessionDirectory(uploadId), $"{index:D8}.chunk");
-                if (!File.Exists(chunkPath))
+                var chunkCount = manifest.File.Size == 0
+                    ? 0
+                    : checked((int)Math.Ceiling((double)manifest.File.Size / manifest.ChunkSizeBytes));
+
+                for (var index = 0; index < chunkCount; index++)
                 {
-                    throw new InvalidDataException($"缺少第 {index} 个分块。 ");
+                    var chunkPath = Path.Combine(GetSessionDirectory(uploadId), $"{index:D8}.chunk");
+                    if (!File.Exists(chunkPath))
+                    {
+                        throw new InvalidDataException($"缺少第 {index} 个分块。 ");
+                    }
+
+                    await using var input = File.OpenRead(chunkPath);
+                    await input.CopyToAsync(output, cancellationToken);
                 }
 
-                await using var input = File.OpenRead(chunkPath);
-                await input.CopyToAsync(output, cancellationToken);
+                await output.FlushAsync(cancellationToken);
+                output.Flush(flushToDisk: true);
+                if (output.Length != manifest.File.Size)
+                {
+                    throw new InvalidDataException("合并后的文件大小与清单不一致。 ");
+                }
             }
 
-            await output.FlushAsync(cancellationToken);
-            if (output.Length != manifest.File.Size)
+            var fullHash = await FileIntegrity.ComputeSha256Async(temporary, cancellationToken);
+            if (!fullHash.Equals(manifest.File.Sha256, StringComparison.OrdinalIgnoreCase))
             {
-                throw new InvalidDataException("合并后的文件大小与清单不一致。 ");
+                throw new InvalidDataException("整文件 SHA-256 校验失败。 ");
             }
-        }
 
-        var fullHash = await FileIntegrity.ComputeSha256Async(temporary, cancellationToken);
-        if (!fullHash.Equals(manifest.File.Sha256, StringComparison.OrdinalIgnoreCase))
+            File.Move(temporary, destination);
+        }
+        finally
         {
             File.Delete(temporary);
-            throw new InvalidDataException("整文件 SHA-256 校验失败。 ");
         }
 
-        File.Move(temporary, destination);
-        logger.LogInformation("上传 {UploadId} 已完成并写入 {Destination}", uploadId, destination);
+        File.SetLastWriteTimeUtc(destination, manifest.File.OriginalModifiedAt.UtcDateTime);
+        logger.LogInformation(
+            "上传 {UploadId} 已完成：设备 {DeviceId}，{Size} 字节，SHA-256 {HashPrefix}",
+            uploadId,
+            manifest.File.DeviceId,
+            manifest.File.Size,
+            manifest.File.Sha256[..8].ToLowerInvariant());
         return CreateCompleteResponse(destination, manifest.File);
     }
 

@@ -7,7 +7,7 @@ MidnightVault 是一套私人使用的 Android 到 Windows 外接硬盘增量备
 仓库已经建立首个可开发纵向骨架：
 
 - `android/`：Kotlin、Jetpack Compose、AlarmManager 与 WorkManager 调度入口；
-- `windows/`：WinUI 3 管理界面、ASP.NET Core 接收服务、路径与完整性核心库；
+- `windows/`：带概览、资料库、设备和设置四页原生导航的 WinUI 3 管理界面，ASP.NET Core 接收服务，以及路径与完整性核心库；
 - `server/`：面向 Termux ARM64 的 Go 控制面服务；
 - `protocol/`：跨端 HTTP 协议定义；
 - `docs/`：已确认需求、架构、安全模型、部署方案与路线图。

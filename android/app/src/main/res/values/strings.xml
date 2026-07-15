@@ -2,6 +2,17 @@
 <resources>
     <string name="app_name">MidnightVault</string>
     <string name="backup_channel_name">备份任务</string>
-    <string name="backup_notification_title">正在备份手机资料</string>
-    <string name="backup_notification_text">正在扫描并上传新增或修改的文件</string>
+    <string name="backup_notification_title">正在检查备份任务</string>
+    <string name="backup_notification_text">等待完成设备配对与目录授权</string>
+    <string name="backup_not_ready">尚未完成设备配对与目录授权</string>
+    <string name="phone_backup_title">手机资料备份</string>
+    <string name="backup_schedule_summary">每天北京时间 00:00 自动增量上传；不删除手机原文件。</string>
+    <string name="pc_status">PC 状态</string>
+    <string name="not_paired">尚未配对</string>
+    <string name="pending_upload">待上传</string>
+    <string name="after_first_scan">首次扫描后显示</string>
+    <string name="recent_task">最近任务</string>
+    <string name="no_records">暂无记录</string>
+    <string name="backup_now">立即备份</string>
+    <string name="exact_alarm">精确闹钟</string>
 </resources>

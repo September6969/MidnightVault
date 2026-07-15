@@ -12,6 +12,12 @@ $env:Receiver__UploadToken = '使用密码生成器创建的随机长令牌'
 dotnet run --project .\windows\src\MidnightVault.Receiver
 ```
 
+启动 WinUI 客户端时使用项目自带的打包启动流程，不要直接运行构建目录中的可执行文件：
+
+```powershell
+dotnet run --project .\windows\src\MidnightVault.Desktop -p:Platform=x64
+```
+
 正式部署将包含：
 
 - WinUI MSIX 私人安装包；

@@ -1,3 +1,4 @@
+using MidnightVault.Desktop.Pages;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
@@ -10,8 +11,35 @@ public sealed partial class MainPage : Page
         InitializeComponent();
     }
 
-    private void BackupNow_Click(object sender, RoutedEventArgs e)
+    private void MainPage_Loaded(object sender, RoutedEventArgs e)
     {
-        StatusText.Text = "请先选择外接硬盘并完成手机配对";
+        if (ContentFrame.Content is null)
+        {
+            ShellNavigationView.SelectedItem = DashboardNavigationItem;
+        }
+    }
+
+    private void ShellNavigationView_SelectionChanged(
+        NavigationView sender,
+        NavigationViewSelectionChangedEventArgs args)
+    {
+        if (args.SelectedItem is not NavigationViewItem item || item.Tag is not string pageTag)
+        {
+            return;
+        }
+
+        Type? pageType = pageTag switch
+        {
+            "dashboard" => typeof(DashboardPage),
+            "library" => typeof(LibraryPage),
+            "devices" => typeof(DevicesPage),
+            "settings" => typeof(SettingsPage),
+            _ => null,
+        };
+
+        if (pageType is not null && ContentFrame.CurrentSourcePageType != pageType)
+        {
+            ContentFrame.Navigate(pageType);
+        }
     }
 }

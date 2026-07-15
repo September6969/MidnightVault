@@ -1,7 +1,6 @@
 package win.september.midnightvault
 
 import android.Manifest
-import android.app.AlarmManager
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -12,12 +11,12 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -27,6 +26,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import win.september.midnightvault.backup.BackupScheduler
@@ -76,35 +76,56 @@ private fun BackupHome(
     onExactAlarmSettings: () -> Unit
 ) {
     Scaffold(
-        topBar = { TopAppBar(title = { Text("MidnightVault") }) }
+        topBar = { TopAppBar(title = { Text(stringResource(R.string.app_name)) }) }
     ) { padding ->
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
-                .padding(20.dp),
+                .padding(padding),
+            contentPadding = PaddingValues(20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text("手机资料备份", style = MaterialTheme.typography.headlineMedium)
-            Text(
-                "每天北京时间 00:00 自动增量上传；不删除手机原文件。",
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            StatusCard("PC 状态", "尚未配对")
-            StatusCard("待上传", "首次扫描后显示")
-            StatusCard("最近任务", "暂无记录")
-
-            Spacer(Modifier.height(8.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Button(onClick = onBackupNow, modifier = Modifier.weight(1f)) {
-                    Text("立即备份")
-                }
-                OutlinedButton(onClick = onExactAlarmSettings, modifier = Modifier.weight(1f)) {
-                    Text("精确闹钟")
+            item {
+                Text(
+                    stringResource(R.string.phone_backup_title),
+                    style = MaterialTheme.typography.headlineMedium
+                )
+            }
+            item {
+                Text(
+                    stringResource(R.string.backup_schedule_summary),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            item {
+                StatusCard(
+                    stringResource(R.string.pc_status),
+                    stringResource(R.string.not_paired)
+                )
+            }
+            item {
+                StatusCard(
+                    stringResource(R.string.pending_upload),
+                    stringResource(R.string.after_first_scan)
+                )
+            }
+            item {
+                StatusCard(
+                    stringResource(R.string.recent_task),
+                    stringResource(R.string.no_records)
+                )
+            }
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Button(onClick = onBackupNow, modifier = Modifier.weight(1f)) {
+                        Text(stringResource(R.string.backup_now))
+                    }
+                    OutlinedButton(onClick = onExactAlarmSettings, modifier = Modifier.weight(1f)) {
+                        Text(stringResource(R.string.exact_alarm))
+                    }
                 }
             }
         }

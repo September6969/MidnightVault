@@ -21,6 +21,14 @@ type server struct {
 	controlToken string
 }
 
+var validTaskStatuses = map[string]struct{}{
+	"queued":    {},
+	"running":   {},
+	"paused":    {},
+	"completed": {},
+	"failed":    {},
+}
+
 func New(database *store.Store, logger *slog.Logger, controlToken string) http.Handler {
 	api := &server{store: database, logger: logger, controlToken: controlToken}
 	mux := http.NewServeMux()
@@ -77,6 +85,12 @@ func (s *server) reportTask(response http.ResponseWriter, request *http.Request)
 		writeError(response, http.StatusBadRequest, "missing_task_fields")
 		return
 	}
+	report.Status = strings.TrimSpace(report.Status)
+	if _, valid := validTaskStatuses[report.Status]; !valid ||
+		report.SuccessCount < 0 || report.SkippedCount < 0 || report.FailedCount < 0 || report.TotalBytes < 0 {
+		writeError(response, http.StatusBadRequest, "invalid_task_summary")
+		return
+	}
 	if report.CompletedAt.IsZero() {
 		report.CompletedAt = time.Now().UTC()
 	}
@@ -91,8 +105,12 @@ func (s *server) reportTask(response http.ResponseWriter, request *http.Request)
 
 func (s *server) authorize(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
-		if s.controlToken == "" && isLoopback(request.RemoteAddr) {
-			next.ServeHTTP(response, request)
+		if s.controlToken == "" {
+			if isLoopback(request.RemoteAddr) {
+				next.ServeHTTP(response, request)
+				return
+			}
+			writeError(response, http.StatusUnauthorized, "unauthorized")
 			return
 		}
 

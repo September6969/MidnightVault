@@ -4,6 +4,7 @@
 
 - [x] 单仓库目录、UTF-8 与忽略规则；
 - [x] WinUI 3、ASP.NET Core 10、.NET 10 核心库；
+- [x] WinUI 概览、资料库、设备与设置四页壳层及真实空状态；
 - [x] Windows 路径安全、文件名转义与 SHA-256；
 - [x] Windows 分块上传接口首版；
 - [x] Android Compose、午夜闹钟、WorkManager 与重启恢复入口；

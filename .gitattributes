@@ -6,3 +6,11 @@
 *.kts text eol=lf
 *.go text eol=lf
 *.md text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.toml text eol=lf
+*.sh text eol=lf
+android/**/*.xml text eol=lf
+android/gradlew text eol=lf
+server/go.mod text eol=lf
+server/go.sum text eol=lf

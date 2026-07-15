@@ -19,7 +19,9 @@ class BackupWorker(
 
         // 下一里程碑在这里接入 MediaStore、SAF 扫描、分块上传与断点状态。
         BackupScheduler.scheduleNext(applicationContext)
-        return Result.failure(workDataOf("message" to "尚未完成设备配对与目录授权"))
+        return Result.failure(
+            workDataOf("message" to applicationContext.getString(R.string.backup_not_ready))
+        )
     }
 
     private fun createForegroundInfo(): ForegroundInfo {

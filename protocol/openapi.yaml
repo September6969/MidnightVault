@@ -3,6 +3,9 @@ info:
   title: MidnightVault API
   version: 0.1.0
   description: Android、Windows 接收服务与 Termux 控制面的初始跨端契约。
+  license:
+    name: Private and proprietary
+    identifier: LicenseRef-Proprietary
 servers:
   - url: https://backup.example.invalid
     description: Windows 数据面
@@ -10,16 +13,23 @@ servers:
     description: Termux 控制面
 tags:
   - name: Receiver
+    description: Windows 文件上传数据面。
   - name: ControlPlane
+    description: Termux 设备与任务协调控制面。
 paths:
   /healthz:
     get:
+      summary: 检查服务健康状态
       operationId: getHealth
+      security: []
       responses:
         "200":
           description: 服务可用
+        "400":
+          description: 请求格式无效
   /api/v1/uploads:
     post:
+      summary: 创建文件上传会话
       tags: [Receiver]
       operationId: startUpload
       security:
@@ -37,8 +47,13 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/StartUploadResponse"
+        "400":
+          description: 文件描述或接收端配置无效
+        "401":
+          description: 上传凭据无效
   /api/v1/uploads/{uploadId}/chunks/{index}:
     put:
+      summary: 上传并校验一个文件分块
       tags: [Receiver]
       operationId: putUploadChunk
       security:
@@ -66,8 +81,15 @@ paths:
       responses:
         "204":
           description: 分块已校验并保存
+        "400":
+          description: 分块序号、长度或哈希无效
+        "401":
+          description: 上传凭据无效
+        "404":
+          description: 上传会话不存在
   /api/v1/uploads/{uploadId}/complete:
     post:
+      summary: 合并分块并完成整文件校验
       tags: [Receiver]
       operationId: completeUpload
       security:
@@ -81,8 +103,15 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CompleteUploadResponse"
+        "400":
+          description: 分块不完整或整文件校验失败
+        "401":
+          description: 上传凭据无效
+        "404":
+          description: 上传会话不存在
   /v1/devices:
     post:
+      summary: 登记或更新配对设备
       tags: [ControlPlane]
       operationId: registerDevice
       security:
@@ -96,8 +125,13 @@ paths:
       responses:
         "201":
           description: 设备已登记
+        "400":
+          description: 设备信息无效
+        "401":
+          description: 控制面凭据无效
   /v1/tasks/report:
     post:
+      summary: 上报备份任务摘要
       tags: [ControlPlane]
       operationId: reportTask
       security:
@@ -111,6 +145,10 @@ paths:
       responses:
         "204":
           description: 摘要已保存
+        "400":
+          description: 任务摘要无效
+        "401":
+          description: 控制面凭据无效
 components:
   securitySchemes:
     UploadToken:
@@ -173,6 +211,7 @@ components:
           default: false
     StartUploadRequest:
       type: object
+      additionalProperties: false
       required: [file]
       properties:
         file:

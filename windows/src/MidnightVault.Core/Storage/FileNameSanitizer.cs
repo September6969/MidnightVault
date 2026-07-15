@@ -33,8 +33,8 @@ public static class FileNameSanitizer
             sanitized = "_";
         }
 
-        var stem = Path.GetFileNameWithoutExtension(sanitized);
-        if (ReservedNames.Contains(stem))
+        var reservedNameStem = Path.GetFileNameWithoutExtension(sanitized);
+        if (ReservedNames.Contains(reservedNameStem))
         {
             sanitized = $"_{sanitized}";
         }
@@ -46,7 +46,33 @@ public static class FileNameSanitizer
 
         var suffix = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(segment)))[..8].ToLowerInvariant();
         var extension = Path.GetExtension(sanitized);
+        var maximumExtensionLength = MaxSegmentLength - suffix.Length - 2;
+        extension = TruncateWithoutSplittingSurrogate(extension, maximumExtensionLength);
+
+        var stem = Path.GetFileNameWithoutExtension(sanitized);
+        if (stem.Length == 0)
+        {
+            stem = "_";
+        }
+
         var allowedStemLength = Math.Max(1, MaxSegmentLength - extension.Length - suffix.Length - 1);
-        return $"{Path.GetFileNameWithoutExtension(sanitized)[..allowedStemLength]}~{suffix}{extension}";
+        stem = TruncateWithoutSplittingSurrogate(stem, allowedStemLength);
+        return $"{stem}~{suffix}{extension}";
+    }
+
+    private static string TruncateWithoutSplittingSurrogate(string value, int maximumLength)
+    {
+        if (value.Length <= maximumLength)
+        {
+            return value;
+        }
+
+        var length = maximumLength;
+        if (length > 0 && char.IsHighSurrogate(value[length - 1]))
+        {
+            length--;
+        }
+
+        return value[..length];
     }
 }

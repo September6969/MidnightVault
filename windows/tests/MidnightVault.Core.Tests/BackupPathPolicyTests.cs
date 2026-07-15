@@ -47,6 +47,23 @@ public sealed class BackupPathPolicyTests
         Assert.Contains("首次备份_2026-07-16", result, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void SanitizeSegment_超长扩展名也不会超过段长度上限()
+    {
+        var result = FileNameSanitizer.SanitizeSegment($"a.{new string('b', 200)}");
+
+        Assert.True(result.Length <= 120);
+        Assert.Contains('~', result);
+    }
+
+    [Theory]
+    [InlineData("CON", "_CON")]
+    [InlineData("LPT1.txt", "_LPT1.txt")]
+    public void SanitizeSegment_转义Windows保留名称(string source, string expected)
+    {
+        Assert.Equal(expected, FileNameSanitizer.SanitizeSegment(source));
+    }
+
     private static UploadDescriptor CreateDescriptor(string relativePath) => new(
         DeviceId: "device-a",
         DeviceName: "手机A",

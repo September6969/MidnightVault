@@ -12,3 +12,12 @@ indent_size = 4
 
 [*.{yml,yaml,json}]
 indent_size = 2
+
+[*.{kt,kts,go,md,yml,yaml,toml}]
+end_of_line = lf
+
+[android/**/*.xml]
+end_of_line = lf
+
+[server/{go.mod,go.sum}]
+end_of_line = lf
