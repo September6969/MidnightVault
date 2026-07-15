@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/windows/" />
+  <Folder Name="/windows/src/">
+    <Project Path="windows/src/MidnightVault.Core/MidnightVault.Core.csproj" />
+    <Project Path="windows/src/MidnightVault.Desktop/MidnightVault.Desktop.csproj" />
+    <Project Path="windows/src/MidnightVault.Receiver/MidnightVault.Receiver.csproj" />
+  </Folder>
+  <Folder Name="/windows/tests/">
+    <Project Path="windows/tests/MidnightVault.Core.Tests/MidnightVault.Core.Tests.csproj" />
+    <Project Path="windows/tests/MidnightVault.Receiver.Tests/MidnightVault.Receiver.Tests.csproj" />
+  </Folder>
+</Solution>

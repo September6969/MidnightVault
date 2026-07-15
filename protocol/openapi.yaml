@@ -1,0 +1,251 @@
+openapi: 3.1.0
+info:
+  title: MidnightVault API
+  version: 0.1.0
+  description: Android、Windows 接收服务与 Termux 控制面的初始跨端契约。
+servers:
+  - url: https://backup.example.invalid
+    description: Windows 数据面
+  - url: https://control.example.invalid
+    description: Termux 控制面
+tags:
+  - name: Receiver
+  - name: ControlPlane
+paths:
+  /healthz:
+    get:
+      operationId: getHealth
+      responses:
+        "200":
+          description: 服务可用
+  /api/v1/uploads:
+    post:
+      tags: [Receiver]
+      operationId: startUpload
+      security:
+        - UploadToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StartUploadRequest"
+      responses:
+        "201":
+          description: 上传会话已创建
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StartUploadResponse"
+  /api/v1/uploads/{uploadId}/chunks/{index}:
+    put:
+      tags: [Receiver]
+      operationId: putUploadChunk
+      security:
+        - UploadToken: []
+      parameters:
+        - $ref: "#/components/parameters/UploadId"
+        - name: index
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 0
+        - name: X-Chunk-Sha256
+          in: header
+          required: true
+          schema:
+            $ref: "#/components/schemas/Sha256"
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              contentEncoding: binary
+      responses:
+        "204":
+          description: 分块已校验并保存
+  /api/v1/uploads/{uploadId}/complete:
+    post:
+      tags: [Receiver]
+      operationId: completeUpload
+      security:
+        - UploadToken: []
+      parameters:
+        - $ref: "#/components/parameters/UploadId"
+      responses:
+        "200":
+          description: 整文件校验并落盘成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompleteUploadResponse"
+  /v1/devices:
+    post:
+      tags: [ControlPlane]
+      operationId: registerDevice
+      security:
+        - ControlToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Device"
+      responses:
+        "201":
+          description: 设备已登记
+  /v1/tasks/report:
+    post:
+      tags: [ControlPlane]
+      operationId: reportTask
+      security:
+        - ControlToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskReport"
+      responses:
+        "204":
+          description: 摘要已保存
+components:
+  securitySchemes:
+    UploadToken:
+      type: apiKey
+      in: header
+      name: X-MidnightVault-Token
+    ControlToken:
+      type: http
+      scheme: bearer
+  parameters:
+    UploadId:
+      name: uploadId
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: "^[0-9a-f]{32}$"
+  schemas:
+    Sha256:
+      type: string
+      pattern: "^[0-9a-fA-F]{64}$"
+    BackupCategory:
+      type: string
+      enum: [Photo, Video, Download, Document, Custom]
+    UploadDescriptor:
+      type: object
+      additionalProperties: false
+      required:
+        - deviceId
+        - deviceName
+        - backupDate
+        - category
+        - relativePath
+        - size
+        - sha256
+        - originalModifiedAt
+      properties:
+        deviceId:
+          type: string
+        deviceName:
+          type: string
+        backupDate:
+          type: string
+          format: date
+        category:
+          $ref: "#/components/schemas/BackupCategory"
+        relativePath:
+          type: string
+        size:
+          type: integer
+          format: int64
+          minimum: 0
+        sha256:
+          $ref: "#/components/schemas/Sha256"
+        originalModifiedAt:
+          type: string
+          format: date-time
+        isInitialBackup:
+          type: boolean
+          default: false
+    StartUploadRequest:
+      type: object
+      required: [file]
+      properties:
+        file:
+          $ref: "#/components/schemas/UploadDescriptor"
+    StartUploadResponse:
+      type: object
+      required: [uploadId, chunkSizeBytes, chunkCount]
+      properties:
+        uploadId:
+          type: string
+        chunkSizeBytes:
+          type: integer
+        chunkCount:
+          type: integer
+    CompleteUploadResponse:
+      type: object
+      required: [relativeStoredPath, sha256, size]
+      properties:
+        relativeStoredPath:
+          type: string
+        sha256:
+          $ref: "#/components/schemas/Sha256"
+        size:
+          type: integer
+          format: int64
+    Device:
+      type: object
+      additionalProperties: false
+      required: [id, displayName, publicKey]
+      properties:
+        id:
+          type: string
+        displayName:
+          type: string
+        publicKey:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    TaskReport:
+      type: object
+      additionalProperties: false
+      required:
+        - taskId
+        - deviceId
+        - status
+        - successCount
+        - skippedCount
+        - failedCount
+        - totalBytes
+      properties:
+        taskId:
+          type: string
+        deviceId:
+          type: string
+        status:
+          type: string
+          enum: [queued, running, paused, completed, failed]
+        successCount:
+          type: integer
+          minimum: 0
+        skippedCount:
+          type: integer
+          minimum: 0
+        failedCount:
+          type: integer
+          minimum: 0
+        totalBytes:
+          type: integer
+          format: int64
+          minimum: 0
+        errorCode:
+          type: string
+        completedAt:
+          type: string
+          format: date-time

@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "MidnightVault.Desktop (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "MidnightVault.Desktop (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

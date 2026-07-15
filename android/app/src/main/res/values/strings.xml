@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">MidnightVault</string>
+    <string name="backup_channel_name">备份任务</string>
+    <string name="backup_notification_title">正在备份手机资料</string>
+    <string name="backup_notification_text">正在扫描并上传新增或修改的文件</string>
+</resources>
