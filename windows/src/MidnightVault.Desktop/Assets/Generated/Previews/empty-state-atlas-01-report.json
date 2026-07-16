@@ -1,0 +1,68 @@
+{
+  "source": "E:\\MidnightVault\\windows\\src\\MidnightVault.Desktop\\Assets\\Generated\\SourceSheets\\empty-state-atlas-01.png",
+  "manifest": "E:\\MidnightVault\\windows\\src\\MidnightVault.Desktop\\Assets\\Generated\\Manifests\\empty-state-atlas-01.json",
+  "preview": "E:\\MidnightVault\\windows\\src\\MidnightVault.Desktop\\Assets\\Generated\\Previews\\empty-state-atlas-01-preview.png",
+  "items": [
+    {
+      "name": "empty-backup",
+      "path": "E:\\MidnightVault\\windows\\src\\MidnightVault.Desktop\\Assets\\Generated\\Processed\\empty-backup.png",
+      "coverage": 0.302852,
+      "contentBBox": [
+        44,
+        30,
+        276,
+        290
+      ],
+      "touchesEdge": false,
+      "chromaResiduePixels": 0
+    },
+    {
+      "name": "empty-library",
+      "path": "E:\\MidnightVault\\windows\\src\\MidnightVault.Desktop\\Assets\\Generated\\Processed\\empty-library.png",
+      "coverage": 0.48834,
+      "contentBBox": [
+        30,
+        34,
+        290,
+        286
+      ],
+      "touchesEdge": false,
+      "chromaResiduePixels": 0
+    },
+    {
+      "name": "pair-device",
+      "path": "E:\\MidnightVault\\windows\\src\\MidnightVault.Desktop\\Assets\\Generated\\Processed\\pair-device.png",
+      "coverage": 0.41501,
+      "contentBBox": [
+        30,
+        46,
+        290,
+        273
+      ],
+      "touchesEdge": false,
+      "chromaResiduePixels": 0
+    },
+    {
+      "name": "drive-setup",
+      "path": "E:\\MidnightVault\\windows\\src\\MidnightVault.Desktop\\Assets\\Generated\\Processed\\drive-setup.png",
+      "coverage": 0.262666,
+      "contentBBox": [
+        30,
+        74,
+        290,
+        245
+      ],
+      "touchesEdge": false,
+      "chromaResiduePixels": 0
+    }
+  ],
+  "duplicateWarnings": [],
+  "previewSizes": [
+    16,
+    24,
+    32,
+    48,
+    64,
+    128
+  ]
+}

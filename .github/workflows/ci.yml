@@ -1,0 +1,99 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    name: Windows (.NET 10 / WinUI 3)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+      - name: Test core
+        run: dotnet test windows/tests/MidnightVault.Core.Tests/MidnightVault.Core.Tests.csproj --configuration Release
+      - name: Test receiver
+        run: dotnet test windows/tests/MidnightVault.Receiver.Tests/MidnightVault.Receiver.Tests.csproj --configuration Release
+      - name: Build receiver
+        run: dotnet build windows/src/MidnightVault.Receiver/MidnightVault.Receiver.csproj --configuration Release
+      - name: Build WinUI client
+        run: dotnet build windows/src/MidnightVault.Desktop/MidnightVault.Desktop.csproj --configuration Release -p:Platform=x64
+      - name: Audit NuGet packages
+        shell: pwsh
+        run: |
+          $result = dotnet list MidnightVault.slnx package --vulnerable --include-transitive
+          $result | Write-Host
+          if ($result -match 'has the following vulnerable packages') {
+            throw 'NuGet vulnerability audit failed.'
+          }
+
+  android:
+    name: Android
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-provider: basic
+      - name: Install Android SDK 37
+        run: yes | sdkmanager "platforms;android-37" "build-tools;37.0.0"
+      - name: Verify Android client
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew lint test assembleDebug --stacktrace
+      - name: Upload lint report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: android-lint-report
+          path: android/app/build/reports/lint-results-debug.html
+          if-no-files-found: ignore
+
+  termux:
+    name: Termux control plane
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: server/go.mod
+          cache-dependency-path: server/go.sum
+      - name: Test
+        working-directory: server
+        run: go test ./...
+      - name: Vet
+        working-directory: server
+        run: go vet ./...
+      - name: Vulnerability scan
+        working-directory: server
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          govulncheck ./...
+      - name: Build Linux ARM64
+        working-directory: server
+        env:
+          GOOS: linux
+          GOARCH: arm64
+          CGO_ENABLED: 0
+        run: go build -trimpath -ldflags="-s -w" -o ../midnightvault-server ./cmd/midnightvault-server
+
+  protocol:
+    name: OpenAPI
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Lint OpenAPI contract
+        run: npx --yes @redocly/cli@latest lint protocol/openapi.yaml

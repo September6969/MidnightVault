@@ -1,10 +1,11 @@
 using Microsoft.UI.Xaml;
+using MidnightVault.Desktop.Services;
 
 namespace MidnightVault.Desktop;
 
 public partial class App : Application
 {
-    private Window? _window;
+    public static MainWindow? MainWindow { get; private set; }
 
     public App()
     {
@@ -13,7 +14,8 @@ public partial class App : Application
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
-        _window = new MainWindow();
-        _window.Activate();
+        MainWindow = new MainWindow();
+        MainWindow.Activate();
+        _ = AppServices.ReceiverProcess.EnsureRunningAsync();
     }
 }

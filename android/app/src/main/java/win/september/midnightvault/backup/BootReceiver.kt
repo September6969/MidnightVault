@@ -10,6 +10,7 @@ class BootReceiver : BroadcastReceiver() {
             intent.action == Intent.ACTION_MY_PACKAGE_REPLACED
         ) {
             BackupScheduler.scheduleNext(context)
+            BackupScheduler.scheduleControlPolling(context)
         }
     }
 }

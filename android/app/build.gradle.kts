@@ -17,9 +17,28 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        val keystorePath = providers.environmentVariable("MIDNIGHTVAULT_ANDROID_KEYSTORE").orNull
+        val storePasswordValue = providers.environmentVariable("MIDNIGHTVAULT_ANDROID_STORE_PASSWORD").orNull
+        val keyAliasValue = providers.environmentVariable("MIDNIGHTVAULT_ANDROID_KEY_ALIAS").orNull
+        val keyPasswordValue = providers.environmentVariable("MIDNIGHTVAULT_ANDROID_KEY_PASSWORD").orNull
+        if (keystorePath != null && storePasswordValue != null &&
+            keyAliasValue != null && keyPasswordValue != null
+        ) {
+            create("release") {
+                storeFile = file(keystorePath)
+                storePassword = storePasswordValue
+                keyAlias = keyAliasValue
+                keyPassword = keyPasswordValue
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
+            isShrinkResources = true
+            signingConfig = signingConfigs.findByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

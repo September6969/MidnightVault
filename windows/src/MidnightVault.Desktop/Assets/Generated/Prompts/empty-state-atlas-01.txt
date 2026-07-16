@@ -1,0 +1,26 @@
+Use case: stylized-concept
+Asset type: production GUI empty-state illustration atlas for a native Windows backup application
+Primary request: Create exactly four separate interface illustrations arranged in an exact 2-column by 2-row grid on a square 2048x2048 canvas.
+
+The illustrations, ordered from left to right and top to bottom, are:
+1. First backup waiting: a compact external drive beside a small crescent moon, with one protected file tile entering the drive.
+2. Empty media library: two clean photo and document tiles resting in front of a compact vault door.
+3. Pair a phone: two modern Android phone silhouettes connected by one secure curved link and a small shield.
+4. Choose a backup drive: one compact external SSD with a shield check and a short cable loop.
+
+Style/medium: premium Fluent-inspired 2.5D vector-like illustration, simple geometric silhouettes, restrained detail, production-ready native Windows UI asset, not concept art.
+Composition/framing: exact front three-quarter view for every object, one centered illustration per cell, each subject uses about 58 percent of its cell, at least 20 percent clear padding on every side.
+Lighting/mood: soft diffuse light from the upper left, quiet and trustworthy, no cast shadows or floor plane.
+Color palette: midnight navy, cool graphite, soft silver, off-white, and one consistent vault-blue accent #5BB8E8. Do not use magenta anywhere in the subjects.
+Materials/textures: matte polymer and softly brushed metal, subtle internal highlights, consistent 3px-equivalent dark navy outline, no photoreal texture.
+Scene/backdrop: perfectly flat uniform solid #FF00FF chroma-key background across the entire canvas for local background removal.
+
+Layout constraints:
+- Every illustration must occupy exactly one isolated grid cell.
+- No object may cross the horizontal or vertical center line.
+- Do not draw grid lines, cell borders, labels, numbers, letters, captions, watermarks, logos, or extra objects.
+- Do not duplicate an illustration.
+- Do not crop, overlap, merge, or connect elements across cells.
+- Keep optical size, camera angle, line weight, material, lighting direction, and detail density identical in all four cells.
+- Background must contain only uniform #FF00FF with no gradient, texture, noise, reflection, shadow, glow, or lighting variation.
+- Crisp edges, generous separation, no contact shadow, no halo, no translucent smoke, no glass, and no use of #FF00FF inside any subject.

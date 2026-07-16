@@ -64,4 +64,15 @@ if ((Test-Path -LiteralPath $gradleWrapper) -and (Test-Path -LiteralPath $env:AN
     Write-Warning 'Android SDK or Gradle Wrapper is unavailable; Android verification was skipped.'
 }
 
+if (Get-Command npx -ErrorAction SilentlyContinue) {
+    Invoke-CheckedCommand 'npx' @(
+        '--yes',
+        '@redocly/cli@latest',
+        'lint',
+        (Join-Path $repositoryRoot 'protocol\openapi.yaml')
+    )
+} else {
+    Write-Warning 'npx is unavailable; OpenAPI lint was skipped.'
+}
+
 Write-Host 'MidnightVault verification completed.'

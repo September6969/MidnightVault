@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:imaging="using:Microsoft.UI.Xaml.Media.Imaging">
+
+    <imaging:BitmapImage
+        x:Key="MidnightAssetEmptyBackup"
+        DecodePixelWidth="320"
+        UriSource="ms-appx:///Assets/Generated/Processed/empty-backup.png" />
+    <imaging:BitmapImage
+        x:Key="MidnightAssetEmptyLibrary"
+        DecodePixelWidth="320"
+        UriSource="ms-appx:///Assets/Generated/Processed/empty-library.png" />
+    <imaging:BitmapImage
+        x:Key="MidnightAssetPairDevice"
+        DecodePixelWidth="320"
+        UriSource="ms-appx:///Assets/Generated/Processed/pair-device.png" />
+    <imaging:BitmapImage
+        x:Key="MidnightAssetDriveSetup"
+        DecodePixelWidth="320"
+        UriSource="ms-appx:///Assets/Generated/Processed/drive-setup.png" />
+</ResourceDictionary>

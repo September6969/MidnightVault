@@ -1,119 +1,227 @@
-<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8"?>
 <Page
     x:Name="DevicesRootPage"
     x:Class="MidnightVault.Desktop.Pages.DevicesPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Loaded="DevicesPage_Loaded"
+    SizeChanged="DevicesPage_SizeChanged">
 
     <Grid>
         <ScrollViewer
             x:Name="DevicesScrollViewer"
-            HorizontalContentAlignment="Center"
+            HorizontalContentAlignment="Stretch"
             HorizontalScrollBarVisibility="Disabled"
             HorizontalScrollMode="Disabled"
             VerticalScrollBarVisibility="Auto">
             <Grid
-            Width="{Binding ActualWidth, ElementName=DevicesScrollViewer}"
-            MaxWidth="1000"
-            Padding="32,28,32,40"
-            HorizontalAlignment="Stretch"
-            RowSpacing="20">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
+                x:Name="DevicesContent"
+                Width="{Binding ViewportWidth, ElementName=DevicesScrollViewer}"
+                MaxWidth="{StaticResource MidnightPageMaxWidth}"
+                Padding="{StaticResource MidnightPagePadding}"
+                HorizontalAlignment="Center"
+                RowSpacing="24">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
 
-            <StackPanel Spacing="6">
-                <TextBlock FontSize="30" FontWeight="SemiBold" Text="设备" />
+                <Grid ColumnSpacing="20" RowSpacing="12">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Spacing="6">
+                        <TextBlock
+                            x:Name="PageTitle"
+                            Style="{StaticResource MidnightPageTitleStyle}"
+                            Text="设备" />
+                        <TextBlock
+                            Style="{StaticResource MidnightPageSubtitleStyle}"
+                            Text="管理两台 Android 手机的配对、在线状态和最近备份。" />
+                    </StackPanel>
+                    <Button
+                        x:Name="PairDeviceButton"
+                        Grid.Column="1"
+                        MinWidth="128"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
+                        AutomationProperties.HelpText="显示一次性二维码并开始设备配对"
+                        Click="PairDevice_Click"
+                        Content="配对新设备"
+                        Style="{StaticResource AccentButtonStyle}" />
+                </Grid>
+
+                <InfoBar
+                    x:Name="PairingInfoBar"
+                    Grid.Row="1"
+                    IsClosable="True"
+                    IsOpen="False"
+                    Severity="Informational" />
+
+                <Border Grid.Row="2" Style="{StaticResource MidnightAccentCardStyle}">
+                    <Grid
+                        x:Name="PairingGuideLayout"
+                        ColumnSpacing="30"
+                        RowSpacing="14">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition x:Name="PairingImageColumn" Width="Auto" />
+                            <ColumnDefinition x:Name="PairingTextColumn" Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Image
+                            x:Name="PairingGuideImage"
+                            Width="156"
+                            Height="156"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            AutomationProperties.Name="两台手机安全配对插画"
+                            Source="{StaticResource MidnightAssetPairDevice}"
+                            Stretch="Uniform" />
+                        <StackPanel
+                            x:Name="PairingGuideText"
+                            Grid.Column="1"
+                            MaxWidth="620"
+                            VerticalAlignment="Center"
+                            Spacing="10">
+                            <TextBlock
+                                x:Name="PairingGuideTitle"
+                                Style="{StaticResource MidnightSectionTitleStyle}"
+                                Text="扫码一次，之后自动直连" />
+                            <TextBlock
+                                x:Name="PairingGuideDescription"
+                                Style="{StaticResource MidnightSecondaryTextStyle}"
+                                Text="电脑会显示一次性二维码，用于交换设备身份和加密凭据。已配对设备在控制面临时离线时仍可尝试直连电脑。" />
+                            <Border
+                                HorizontalAlignment="Left"
+                                Style="{StaticResource MidnightStatusBadgeStyle}">
+                                <TextBlock
+                                    x:Name="PairingExpiryText"
+                                    Foreground="{ThemeResource MidnightAccentStrongBrush}"
+                                    Text="最多 2 台设备，每台默认 1 个上传流" />
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
                 <TextBlock
-                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                    Text="管理两台 Android 手机的配对、在线状态和最近备份。"
-                    TextWrapping="Wrap" />
-            </StackPanel>
+                    Grid.Row="3"
+                    Style="{StaticResource MidnightSectionTitleStyle}"
+                    Text="设备位置" />
 
-            <CommandBar
-                Grid.Row="1"
-                HorizontalAlignment="Left"
-                Background="Transparent"
-                DefaultLabelPosition="Right"
-                IsOpen="True">
-                <AppBarButton Click="PairDevice_Click" Label="配对新设备">
-                    <AppBarButton.Icon>
-                        <FontIcon Glyph="&#xE8FA;" />
-                    </AppBarButton.Icon>
-                </AppBarButton>
-            </CommandBar>
+                <StackPanel Grid.Row="4" Spacing="12">
+                    <Border Style="{StaticResource MidnightCardStyle}">
+                        <Grid x:Name="DeviceSlotOneGrid" ColumnSpacing="16" RowSpacing="8">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition x:Name="DeviceSlotOneStatusColumn" Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Border Style="{StaticResource MidnightIconTileStyle}">
+                                <FontIcon
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    FontSize="22"
+                                    Foreground="{ThemeResource MidnightAccentStrongBrush}"
+                                    Glyph="&#xE8EA;" />
+                            </Border>
+                            <StackPanel Grid.Column="1" Spacing="4">
+                                <TextBlock
+                                    x:Name="DeviceSlotOneName"
+                                    FontSize="18"
+                                    FontWeight="SemiBold"
+                                    Text="设备位置 1" />
+                                <TextBlock
+                                    x:Name="DeviceSlotOneDetail"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                    Text="尚未配对" />
+                            </StackPanel>
+                            <Border
+                                x:Name="DeviceSlotOneStatus"
+                                Grid.Column="2"
+                                VerticalAlignment="Center"
+                                Style="{StaticResource MidnightStatusBadgeStyle}">
+                                <TextBlock
+                                    x:Name="DeviceSlotOneStatusText"
+                                    Foreground="{ThemeResource MidnightAccentStrongBrush}"
+                                    Text="等待扫码" />
+                            </Border>
+                            <Button
+                                x:Name="DeviceSlotOneRevokeButton"
+                                Grid.Row="1"
+                                Grid.Column="1"
+                                HorizontalAlignment="Left"
+                                Click="RevokeDevice_Click"
+                                Content="撤销设备"
+                                Visibility="Collapsed" />
+                        </Grid>
+                    </Border>
 
-            <InfoBar
-                x:Name="PairingInfoBar"
-                Grid.Row="2"
-                IsClosable="True"
-                IsOpen="False"
-                Severity="Informational" />
-
-            <StackPanel Grid.Row="3" Spacing="12">
-                <Border
-                    Padding="20"
-                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                    BorderThickness="1"
-                    CornerRadius="8">
-                    <Grid ColumnSpacing="16">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <FontIcon
-                            Width="40"
-                            Height="40"
-                            VerticalAlignment="Center"
-                            FontSize="28"
-                            Glyph="&#xE8EA;" />
-                        <StackPanel Grid.Column="1" Spacing="4">
-                            <TextBlock FontSize="18" FontWeight="SemiBold" Text="设备位置 1" />
-                            <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="尚未配对" />
-                        </StackPanel>
-                        <TextBlock
-                            Grid.Column="2"
-                            VerticalAlignment="Center"
-                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                            Text="等待扫码" />
-                    </Grid>
-                </Border>
-
-                <Border
-                    Padding="20"
-                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                    BorderThickness="1"
-                    CornerRadius="8">
-                    <Grid ColumnSpacing="16">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <FontIcon
-                            Width="40"
-                            Height="40"
-                            VerticalAlignment="Center"
-                            FontSize="28"
-                            Glyph="&#xE8EA;" />
-                        <StackPanel Grid.Column="1" Spacing="4">
-                            <TextBlock FontSize="18" FontWeight="SemiBold" Text="设备位置 2" />
-                            <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="尚未配对" />
-                        </StackPanel>
-                        <TextBlock
-                            Grid.Column="2"
-                            VerticalAlignment="Center"
-                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                            Text="等待扫码" />
-                    </Grid>
-                </Border>
-            </StackPanel>
+                    <Border Style="{StaticResource MidnightCardStyle}">
+                        <Grid x:Name="DeviceSlotTwoGrid" ColumnSpacing="16" RowSpacing="8">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition x:Name="DeviceSlotTwoStatusColumn" Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Border Style="{StaticResource MidnightIconTileStyle}">
+                                <FontIcon
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    FontSize="22"
+                                    Foreground="{ThemeResource MidnightAccentStrongBrush}"
+                                    Glyph="&#xE8EA;" />
+                            </Border>
+                            <StackPanel Grid.Column="1" Spacing="4">
+                                <TextBlock
+                                    x:Name="DeviceSlotTwoName"
+                                    FontSize="18"
+                                    FontWeight="SemiBold"
+                                    Text="设备位置 2" />
+                                <TextBlock
+                                    x:Name="DeviceSlotTwoDetail"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                    Text="尚未配对" />
+                            </StackPanel>
+                            <Border
+                                x:Name="DeviceSlotTwoStatus"
+                                Grid.Column="2"
+                                VerticalAlignment="Center"
+                                Style="{StaticResource MidnightStatusBadgeStyle}">
+                                <TextBlock
+                                    x:Name="DeviceSlotTwoStatusText"
+                                    Foreground="{ThemeResource MidnightAccentStrongBrush}"
+                                    Text="等待扫码" />
+                            </Border>
+                            <Button
+                                x:Name="DeviceSlotTwoRevokeButton"
+                                Grid.Row="1"
+                                Grid.Column="1"
+                                HorizontalAlignment="Left"
+                                Click="RevokeDevice_Click"
+                                Content="撤销设备"
+                                Visibility="Collapsed" />
+                        </Grid>
+                    </Border>
+                </StackPanel>
             </Grid>
         </ScrollViewer>
     </Grid>

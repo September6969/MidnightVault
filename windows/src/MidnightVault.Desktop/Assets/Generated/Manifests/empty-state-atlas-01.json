@@ -1,0 +1,50 @@
+{
+  "sheet": "empty-state-atlas-01.png",
+  "prompt": "../Prompts/empty-state-atlas-01.txt",
+  "canvas": {
+    "width": 2048,
+    "height": 2048
+  },
+  "grid": {
+    "columns": 2,
+    "rows": 2,
+    "cellWidth": 1024,
+    "cellHeight": 1024
+  },
+  "background": {
+    "mode": "chroma-key",
+    "color": "#FF00FF",
+    "tolerance": 42
+  },
+  "output": {
+    "canvasWidth": 320,
+    "canvasHeight": 320,
+    "padding": 30
+  },
+  "items": [
+    {
+      "index": 0,
+      "name": "empty-backup",
+      "row": 0,
+      "column": 0
+    },
+    {
+      "index": 1,
+      "name": "empty-library",
+      "row": 0,
+      "column": 1
+    },
+    {
+      "index": 2,
+      "name": "pair-device",
+      "row": 1,
+      "column": 0
+    },
+    {
+      "index": 3,
+      "name": "drive-setup",
+      "row": 1,
+      "column": 1
+    }
+  ]
+}

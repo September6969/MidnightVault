@@ -18,7 +18,10 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <TitleBar x:Name="AppTitleBar" Title="MidnightVault 手机备份">
+        <TitleBar
+            x:Name="AppTitleBar"
+            Subtitle="私人增量备份"
+            Title="MidnightVault">
             <TitleBar.IconSource>
                 <ImageIconSource ImageSource="Assets/AppIcon.ico" />
             </TitleBar.IconSource>

@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using System.Collections.Concurrent;
 using System.Text.Json;
 using Microsoft.Extensions.Options;
 using MidnightVault.Core.Models;
@@ -10,15 +11,20 @@ namespace MidnightVault.Receiver.Services;
 public sealed class UploadSessionStore(
     IOptions<ReceiverOptions> options,
     BackupPathPolicy pathPolicy,
+    StorageVolumeService storageVolume,
+    CatalogStore catalog,
+    DailyManifestWriter manifestWriter,
     ILogger<UploadSessionStore> logger)
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
     private readonly ReceiverOptions _options = options.Value;
+    private readonly ConcurrentDictionary<string, SemaphoreSlim> _sessionLocks = new();
 
     public async Task<StartUploadResponse> StartAsync(UploadDescriptor descriptor, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(descriptor);
         _ = pathPolicy.ResolveDestination(_options.RootPath, descriptor);
+        await storageVolume.EnsureCapacityAsync(descriptor.Size, cancellationToken);
 
         var uploadId = Guid.NewGuid().ToString("N");
         var sessionDirectory = GetSessionDirectory(uploadId);
@@ -43,41 +49,126 @@ public sealed class UploadSessionStore(
         string expectedSha256,
         CancellationToken cancellationToken)
     {
-        var manifest = await ReadManifestAsync(uploadId, cancellationToken);
-        var expectedLength = GetExpectedChunkLength(manifest, index);
-        var sessionDirectory = GetSessionDirectory(uploadId);
-        var destination = Path.Combine(sessionDirectory, $"{index:D8}.chunk");
-        var temporary = $"{destination}.uploading";
-
+        var gate = GetSessionLock(uploadId);
+        await gate.WaitAsync(cancellationToken);
         try
         {
-            await using (var output = new FileStream(temporary, FileMode.Create, FileAccess.Write, FileShare.None, 1024 * 1024, true))
+            var manifest = await ReadManifestAsync(uploadId, cancellationToken);
+            var expectedLength = GetExpectedChunkLength(manifest, index);
+            var sessionDirectory = GetSessionDirectory(uploadId);
+            var destination = Path.Combine(sessionDirectory, $"{index:D8}.chunk");
+            var temporary = $"{destination}.uploading";
+            try
             {
-                await content.CopyToAsync(output, cancellationToken);
-                await output.FlushAsync(cancellationToken);
-                output.Flush(flushToDisk: true);
-                if (output.Length != expectedLength)
+                await using (var output = new FileStream(
+                    temporary,
+                    FileMode.Create,
+                    FileAccess.Write,
+                    FileShare.None,
+                    1024 * 1024,
+                    FileOptions.Asynchronous | FileOptions.WriteThrough))
                 {
-                    throw new InvalidDataException($"分块长度应为 {expectedLength} 字节，实际为 {output.Length} 字节。 ");
+                    await content.CopyToAsync(output, cancellationToken);
+                    await output.FlushAsync(cancellationToken);
+                    output.Flush(flushToDisk: true);
+                    if (output.Length != expectedLength)
+                    {
+                        throw new InvalidDataException($"分块长度应为 {expectedLength} 字节，实际为 {output.Length} 字节。 ");
+                    }
                 }
-            }
 
-            var actualSha256 = await FileIntegrity.ComputeSha256Async(temporary, cancellationToken);
-            if (!actualSha256.Equals(expectedSha256, StringComparison.OrdinalIgnoreCase))
+                var actualSha256 = await FileIntegrity.ComputeSha256Async(temporary, cancellationToken);
+                if (!actualSha256.Equals(expectedSha256, StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new InvalidDataException("分块 SHA-256 校验失败。 ");
+                }
+
+                File.Move(temporary, destination, overwrite: true);
+            }
+            finally
             {
-                throw new InvalidDataException("分块 SHA-256 校验失败。 ");
+                File.Delete(temporary);
             }
-
-            File.Move(temporary, destination, overwrite: true);
         }
         finally
         {
-            File.Delete(temporary);
+            gate.Release();
         }
     }
 
     public async Task<CompleteUploadResponse> CompleteAsync(string uploadId, CancellationToken cancellationToken)
     {
+        var gate = GetSessionLock(uploadId);
+        await gate.WaitAsync(cancellationToken);
+        try
+        {
+            return await CompleteCoreAsync(uploadId, cancellationToken);
+        }
+        finally
+        {
+            gate.Release();
+        }
+    }
+
+    public async Task<UploadStatusResponse> GetStatusAsync(string uploadId, CancellationToken cancellationToken)
+    {
+        var gate = GetSessionLock(uploadId);
+        await gate.WaitAsync(cancellationToken);
+        try
+        {
+            var manifest = await ReadManifestAsync(uploadId, cancellationToken);
+            var completed = await ReadCompletionAsync(uploadId, cancellationToken);
+            var chunkCount = manifest.File.Size == 0
+                ? 0
+                : checked((int)Math.Ceiling((double)manifest.File.Size / manifest.ChunkSizeBytes));
+            var received = Directory.EnumerateFiles(GetSessionDirectory(uploadId), "*.chunk")
+                .Select(Path.GetFileNameWithoutExtension)
+                .Select(name => int.TryParse(name, out var index) ? index : -1)
+                .Where(index => index >= 0 && index < chunkCount)
+                .Order()
+                .ToArray();
+            return new UploadStatusResponse(
+                uploadId,
+                manifest.ChunkSizeBytes,
+                chunkCount,
+                received,
+                completed is not null,
+                completed);
+        }
+        finally
+        {
+            gate.Release();
+        }
+    }
+
+    public async Task<bool> IsOwnedByDeviceAsync(
+        string uploadId,
+        string deviceId,
+        CancellationToken cancellationToken)
+    {
+        var gate = GetSessionLock(uploadId);
+        await gate.WaitAsync(cancellationToken);
+        try
+        {
+            var manifest = await ReadManifestAsync(uploadId, cancellationToken);
+            return string.Equals(
+                manifest.File.DeviceId,
+                deviceId,
+                StringComparison.Ordinal);
+        }
+        finally
+        {
+            gate.Release();
+        }
+    }
+
+    private async Task<CompleteUploadResponse> CompleteCoreAsync(
+        string uploadId,
+        CancellationToken cancellationToken)
+    {
+        var priorCompletion = await ReadCompletionAsync(uploadId, cancellationToken);
+        if (priorCompletion is not null) return priorCompletion;
+
         var manifest = await ReadManifestAsync(uploadId, cancellationToken);
         var destination = pathPolicy.ResolveDestination(_options.RootPath, manifest.File);
         Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
@@ -88,7 +179,7 @@ public sealed class UploadSessionStore(
             if (existingHash.Equals(manifest.File.Sha256, StringComparison.OrdinalIgnoreCase))
             {
                 File.SetLastWriteTimeUtc(destination, manifest.File.OriginalModifiedAt.UtcDateTime);
-                return CreateCompleteResponse(destination, manifest.File);
+                return await FinalizeCompletionAsync(uploadId, destination, manifest.File, cancellationToken);
             }
 
             destination = AddHashSuffix(destination, manifest.File.Sha256[..8]);
@@ -143,7 +234,40 @@ public sealed class UploadSessionStore(
             manifest.File.DeviceId,
             manifest.File.Size,
             manifest.File.Sha256[..8].ToLowerInvariant());
-        return CreateCompleteResponse(destination, manifest.File);
+        return await FinalizeCompletionAsync(uploadId, destination, manifest.File, cancellationToken);
+    }
+
+    private async Task<CompleteUploadResponse> FinalizeCompletionAsync(
+        string uploadId,
+        string destination,
+        UploadDescriptor descriptor,
+        CancellationToken cancellationToken)
+    {
+        var response = CreateCompleteResponse(destination, descriptor);
+        await catalog.RecordCompletedAsync(descriptor, response.RelativeStoredPath, cancellationToken);
+        await manifestWriter.AppendAsync(uploadId, descriptor, response, cancellationToken);
+
+        var completionPath = GetCompletionPath(uploadId);
+        var temporary = completionPath + ".tmp";
+        await using (var stream = new FileStream(
+            temporary,
+            FileMode.Create,
+            FileAccess.Write,
+            FileShare.None,
+            4096,
+            FileOptions.Asynchronous | FileOptions.WriteThrough))
+        {
+            await JsonSerializer.SerializeAsync(stream, response, JsonOptions, cancellationToken);
+            await stream.FlushAsync(cancellationToken);
+            stream.Flush(flushToDisk: true);
+        }
+        File.Move(temporary, completionPath, overwrite: true);
+
+        foreach (var chunk in Directory.EnumerateFiles(GetSessionDirectory(uploadId), "*.chunk"))
+        {
+            File.Delete(chunk);
+        }
+        return response;
     }
 
     private string GetSessionDirectory(string uploadId)
@@ -169,6 +293,27 @@ public sealed class UploadSessionStore(
         await using var stream = File.OpenRead(path);
         return await JsonSerializer.DeserializeAsync<UploadManifest>(stream, JsonOptions, cancellationToken)
             ?? throw new InvalidDataException("上传任务清单损坏。 ");
+    }
+
+    private async Task<CompleteUploadResponse?> ReadCompletionAsync(
+        string uploadId,
+        CancellationToken cancellationToken)
+    {
+        var path = GetCompletionPath(uploadId);
+        if (!File.Exists(path)) return null;
+        await using var stream = File.OpenRead(path);
+        return await JsonSerializer.DeserializeAsync<CompleteUploadResponse>(stream, JsonOptions, cancellationToken)
+            ?? throw new InvalidDataException("上传完成记录已损坏。");
+    }
+
+    private string GetCompletionPath(string uploadId) => Path.Combine(
+        GetSessionDirectory(uploadId),
+        "completion.json");
+
+    private SemaphoreSlim GetSessionLock(string uploadId)
+    {
+        _ = GetSessionDirectory(uploadId);
+        return _sessionLocks.GetOrAdd(uploadId.ToLowerInvariant(), _ => new SemaphoreSlim(1, 1));
     }
 
     private static long GetExpectedChunkLength(UploadManifest manifest, int index)

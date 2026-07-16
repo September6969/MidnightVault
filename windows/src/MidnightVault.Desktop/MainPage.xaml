@@ -7,10 +7,12 @@
 
     <NavigationView
         x:Name="ShellNavigationView"
+        AlwaysShowHeader="False"
         AutomationProperties.Name="主导航"
+        CompactPaneLength="48"
         IsBackButtonVisible="Collapsed"
         IsSettingsVisible="False"
-        OpenPaneLength="220"
+        OpenPaneLength="236"
         PaneDisplayMode="Auto"
         SelectionChanged="ShellNavigationView_SelectionChanged">
         <NavigationView.MenuItems>

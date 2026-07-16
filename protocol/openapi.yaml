@@ -34,6 +34,7 @@ paths:
       operationId: startUpload
       security:
         - UploadToken: []
+          DeviceSignature: []
       requestBody:
         required: true
         content:
@@ -51,6 +52,27 @@ paths:
           description: 文件描述或接收端配置无效
         "401":
           description: 上传凭据无效
+  /api/v1/uploads/{uploadId}:
+    get:
+      summary: 查询持久化上传进度
+      tags: [Receiver]
+      operationId: getUploadStatus
+      security:
+        - UploadToken: []
+          DeviceSignature: []
+      parameters:
+        - $ref: "#/components/parameters/UploadId"
+      responses:
+        "200":
+          description: 返回已持久化分块与完成状态
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UploadStatusResponse"
+        "401":
+          description: 上传凭据无效
+        "404":
+          description: 上传会话不存在
   /api/v1/uploads/{uploadId}/chunks/{index}:
     put:
       summary: 上传并校验一个文件分块
@@ -58,6 +80,7 @@ paths:
       operationId: putUploadChunk
       security:
         - UploadToken: []
+          DeviceSignature: []
       parameters:
         - $ref: "#/components/parameters/UploadId"
         - name: index
@@ -94,6 +117,7 @@ paths:
       operationId: completeUpload
       security:
         - UploadToken: []
+          DeviceSignature: []
       parameters:
         - $ref: "#/components/parameters/UploadId"
       responses:
@@ -109,7 +133,208 @@ paths:
           description: 上传凭据无效
         "404":
           description: 上传会话不存在
+  /api/v1/library:
+    get:
+      summary: 查询 PC 资料库索引
+      description: 仅允许 Windows 本机回环连接，Android 上传端不可读取资料库。
+      tags: [Receiver]
+      operationId: queryLibrary
+      security:
+        - UploadToken: []
+      parameters:
+        - name: query
+          in: query
+          schema:
+            type: string
+        - name: category
+          in: query
+          schema:
+            $ref: "#/components/schemas/BackupCategory"
+        - name: deviceId
+          in: query
+          schema:
+            type: string
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 500
+      responses:
+        "200":
+          description: 资料库分页结果
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LibraryPageResponse"
+        "401":
+          description: 上传凭据无效
+  /api/v1/library/summary:
+    get:
+      summary: 获取资料库汇总
+      description: 仅允许 Windows 本机回环连接。
+      tags: [Receiver]
+      operationId: getLibrarySummary
+      security:
+        - UploadToken: []
+      responses:
+        "200":
+          description: 文件、容量和设备统计
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LibrarySummaryResponse"
+        "401":
+          description: 上传凭据无效
+  /api/v1/library/{id}/content:
+    get:
+      summary: 读取资料库原文件，支持 HTTP Range
+      description: 仅允许 Windows 本机回环连接，公网数据面不提供下载能力。
+      tags: [Receiver]
+      operationId: getLibraryContent
+      security:
+        - UploadToken: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        "200":
+          description: 文件内容
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                contentEncoding: binary
+        "206":
+          description: 文件分段内容
+        "401":
+          description: 上传凭据无效
+        "404":
+          description: 索引或文件不存在
+  /api/v1/pairing/sessions:
+    post:
+      summary: 创建五分钟有效的一次性配对码
+      description: 仅允许 Windows 本机客户端创建。
+      tags: [Receiver]
+      operationId: createPairingSession
+      security:
+        - UploadToken: []
+      responses:
+        "200":
+          description: 一次性配对会话
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreatePairingSessionResponse"
+        "401":
+          description: PC 管理凭据无效
+  /api/v1/pairing/claim:
+    post:
+      summary: Android 使用一次性码领取上传凭据并登记公钥
+      tags: [Receiver]
+      operationId: claimPairing
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClaimPairingRequest"
+      responses:
+        "200":
+          description: 配对成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClaimPairingResponse"
+        "401":
+          description: 配对码无效、过期或已使用
+  /api/v1/devices/register:
+    post:
+      summary: 使用已有上传令牌手动登记设备公钥
+      tags: [Receiver]
+      operationId: registerUploadDevice
+      security:
+        - UploadToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterUploadDeviceRequest"
+      responses:
+        "204":
+          description: 公钥已登记
+        "400":
+          description: 设备字段无效
+        "401":
+          description: 上传令牌无效
+  /api/v1/devices:
+    get:
+      summary: 查询 PC 已配对上传设备
+      description: 仅允许 Windows 本机客户端查询。
+      tags: [Receiver]
+      operationId: getUploadDevices
+      security:
+        - UploadToken: []
+      responses:
+        "200":
+          description: 已配对设备列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PairedDeviceResponse"
+        "401":
+          description: 上传令牌无效
+  /api/v1/devices/{deviceId}:
+    delete:
+      summary: 撤销 PC 数据面的上传设备
+      description: 仅允许 Windows 本机客户端调用；撤销后该设备的签名请求立即失效。
+      tags: [Receiver]
+      operationId: revokeUploadDevice
+      security:
+        - UploadToken: []
+      parameters:
+        - name: deviceId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: 设备已撤销或原本不存在
+        "401":
+          description: 上传令牌无效
   /v1/devices:
+    get:
+      summary: 查询控制面设备与撤销状态
+      tags: [ControlPlane]
+      operationId: listControlDevices
+      security:
+        - ControlToken: []
+      responses:
+        "200":
+          description: 设备列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Device"
+        "401":
+          description: 控制面凭据无效
     post:
       summary: 登记或更新配对设备
       tags: [ControlPlane]
@@ -129,13 +354,62 @@ paths:
           description: 设备信息无效
         "401":
           description: 控制面凭据无效
+  /v1/devices/{id}:
+    delete:
+      summary: 撤销设备的签名访问
+      tags: [ControlPlane]
+      operationId: revokeDevice
+      security:
+        - ControlToken: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: 设备已撤销
+        "401":
+          description: 控制面凭据无效
+        "404":
+          description: 设备不存在或已撤销
+  /v1/tasks:
+    get:
+      summary: 查询最近任务摘要
+      tags: [ControlPlane]
+      operationId: listTasks
+      security:
+        - ControlToken: []
+      parameters:
+        - name: deviceId
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 500
+      responses:
+        "200":
+          description: 任务摘要列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TaskReport"
+        "401":
+          description: 控制面凭据无效
   /v1/tasks/report:
     post:
       summary: 上报备份任务摘要
       tags: [ControlPlane]
       operationId: reportTask
       security:
-        - ControlToken: []
+        - DeviceSignature: []
       requestBody:
         required: true
         content:
@@ -148,7 +422,73 @@ paths:
         "400":
           description: 任务摘要无效
         "401":
+          description: 设备签名无效或设备已撤销
+        "409":
+          description: nonce 已使用，请求被判定为重放
+  /v1/commands:
+    post:
+      summary: 向 Android 下发立即备份指令
+      tags: [ControlPlane]
+      operationId: createCommand
+      security:
+        - ControlToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCommandRequest"
+      responses:
+        "201":
+          description: 指令已进入队列
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ControlCommand"
+        "400":
+          description: 指令类型或设备无效
+        "401":
           description: 控制面凭据无效
+  /v1/commands/next:
+    get:
+      summary: Android 拉取下一条待执行指令
+      tags: [ControlPlane]
+      operationId: getNextCommand
+      security:
+        - DeviceSignature: []
+      responses:
+        "200":
+          description: 待执行指令
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ControlCommand"
+        "204":
+          description: 当前没有指令
+        "401":
+          description: 设备签名无效或设备已撤销
+        "409":
+          description: nonce 已使用
+  /v1/commands/{id}/ack:
+    post:
+      summary: Android 确认已经领取远程指令
+      tags: [ControlPlane]
+      operationId: acknowledgeCommand
+      security:
+        - DeviceSignature: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: 指令已确认
+        "401":
+          description: 设备签名无效或设备已撤销
+        "404":
+          description: 指令不存在
 components:
   securitySchemes:
     UploadToken:
@@ -158,6 +498,14 @@ components:
     ControlToken:
       type: http
       scheme: bearer
+    DeviceSignature:
+      type: apiKey
+      in: header
+      name: X-Signature
+      description: >-
+        ECDSA P-256/SHA-256 DER 签名。请求还必须包含 X-Device-Id、X-Timestamp、
+        X-Nonce 和 X-Content-Sha256；规范串为 METHOD、path+query、timestamp、nonce、
+        content hash，以换行连接。
   parameters:
     UploadId:
       name: uploadId
@@ -237,10 +585,164 @@ components:
         size:
           type: integer
           format: int64
+    UploadStatusResponse:
+      type: object
+      required: [uploadId, chunkSizeBytes, chunkCount, receivedChunks, completed]
+      properties:
+        uploadId:
+          type: string
+        chunkSizeBytes:
+          type: integer
+        chunkCount:
+          type: integer
+        receivedChunks:
+          type: array
+          items:
+            type: integer
+            minimum: 0
+        completed:
+          type: boolean
+        result:
+          oneOf:
+            - $ref: "#/components/schemas/CompleteUploadResponse"
+            - type: "null"
+    LibraryItemResponse:
+      type: object
+      required:
+        - id
+        - deviceId
+        - deviceName
+        - backupDate
+        - category
+        - relativePath
+        - relativeStoredPath
+        - size
+        - sha256
+        - originalModifiedAt
+        - isInitialBackup
+        - completedAt
+      properties:
+        id:
+          type: integer
+          format: int64
+        deviceId:
+          type: string
+        deviceName:
+          type: string
+        backupDate:
+          type: string
+          format: date
+        category:
+          $ref: "#/components/schemas/BackupCategory"
+        relativePath:
+          type: string
+        relativeStoredPath:
+          type: string
+        size:
+          type: integer
+          format: int64
+        sha256:
+          $ref: "#/components/schemas/Sha256"
+        originalModifiedAt:
+          type: string
+          format: date-time
+        isInitialBackup:
+          type: boolean
+        completedAt:
+          type: string
+          format: date-time
+    LibraryPageResponse:
+      type: object
+      required: [items, offset, limit, total]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/LibraryItemResponse"
+        offset:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+          format: int64
+    LibrarySummaryResponse:
+      type: object
+      required: [fileCount, totalBytes, deviceCount]
+      properties:
+        fileCount:
+          type: integer
+          format: int64
+        totalBytes:
+          type: integer
+          format: int64
+        deviceCount:
+          type: integer
+        latestCompletedAt:
+          oneOf:
+            - type: string
+              format: date-time
+            - type: "null"
+    CreatePairingSessionResponse:
+      type: object
+      required: [code, expiresAt]
+      properties:
+        code:
+          type: string
+          pattern: "^[0-9a-f]{64}$"
+        expiresAt:
+          type: string
+          format: date-time
+    ClaimPairingRequest:
+      type: object
+      additionalProperties: false
+      required: [code, deviceId, deviceName, publicKey]
+      properties:
+        code:
+          type: string
+        deviceId:
+          type: string
+        deviceName:
+          type: string
+        publicKey:
+          type: string
+          description: Base64 编码的 P-256 SubjectPublicKeyInfo
+    ClaimPairingResponse:
+      type: object
+      required: [uploadToken]
+      properties:
+        uploadToken:
+          type: string
+          writeOnly: true
+    RegisterUploadDeviceRequest:
+      type: object
+      additionalProperties: false
+      required: [deviceId, deviceName, publicKey]
+      properties:
+        deviceId:
+          type: string
+        deviceName:
+          type: string
+        publicKey:
+          type: string
+    PairedDeviceResponse:
+      type: object
+      required: [deviceId, deviceName, pairedAt, lastSeenAt]
+      properties:
+        deviceId:
+          type: string
+        deviceName:
+          type: string
+        pairedAt:
+          type: string
+          format: date-time
+        lastSeenAt:
+          type: string
+          format: date-time
     Device:
       type: object
       additionalProperties: false
-      required: [id, displayName, publicKey]
+      required: [id, displayName, publicKey, createdAt, lastSeenAt]
       properties:
         id:
           type: string
@@ -251,6 +753,14 @@ components:
         createdAt:
           type: string
           format: date-time
+        lastSeenAt:
+          type: string
+          format: date-time
+        revokedAt:
+          oneOf:
+            - type: string
+              format: date-time
+            - type: "null"
     TaskReport:
       type: object
       additionalProperties: false
@@ -288,3 +798,38 @@ components:
         completedAt:
           type: string
           format: date-time
+    CreateCommandRequest:
+      type: object
+      additionalProperties: false
+      required: [deviceId, type]
+      properties:
+        deviceId:
+          type: string
+        type:
+          type: string
+          enum: [backup-now]
+    ControlCommand:
+      type: object
+      required: [id, deviceId, type, status, createdAt, expiresAt]
+      properties:
+        id:
+          type: string
+        deviceId:
+          type: string
+        type:
+          type: string
+          enum: [backup-now]
+        status:
+          type: string
+          enum: [queued, acknowledged]
+        createdAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+        acknowledgedAt:
+          oneOf:
+            - type: string
+              format: date-time
+            - type: "null"
