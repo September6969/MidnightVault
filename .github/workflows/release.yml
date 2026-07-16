@@ -16,7 +16,7 @@ jobs:
     env:
       WINDOWS_PFX_BASE64: ${{ secrets.WINDOWS_PFX_BASE64 }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-dotnet@v5
         with:
           dotnet-version: 10.0.x
@@ -59,7 +59,7 @@ jobs:
     env:
       ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
@@ -96,7 +96,7 @@ jobs:
     name: Termux ARM64
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-go@v6
         with:
           go-version-file: server/go.mod
