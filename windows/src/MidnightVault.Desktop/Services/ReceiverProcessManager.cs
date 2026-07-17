@@ -69,16 +69,70 @@ public sealed class ReceiverProcessManager(
     {
         var addresses = NetworkInterface.GetAllNetworkInterfaces()
             .Where(adapter => adapter.OperationalStatus == OperationalStatus.Up &&
-                adapter.NetworkInterfaceType != NetworkInterfaceType.Loopback)
-            .SelectMany(adapter => adapter.GetIPProperties().UnicastAddresses)
-            .Select(address => address.Address)
-            .Where(address => address.AddressFamily == AddressFamily.InterNetwork &&
-                !IPAddress.IsLoopback(address))
-            .Distinct()
-            .Select(address => $"http://{address}:{port}")
+                adapter.NetworkInterfaceType is not NetworkInterfaceType.Loopback and
+                    not NetworkInterfaceType.Tunnel)
+            .SelectMany(adapter =>
+            {
+                var properties = adapter.GetIPProperties();
+                var hasDefaultGateway = properties.GatewayAddresses.Any(gateway =>
+                    gateway.Address.AddressFamily == AddressFamily.InterNetwork &&
+                    !gateway.Address.Equals(IPAddress.Any));
+                var isVirtual = IsVirtualAdapter(adapter);
+                return properties.UnicastAddresses.Select(address => new PairingAddressCandidate(
+                    address.Address,
+                    isVirtual,
+                    hasDefaultGateway,
+                    GetInterfacePriority(adapter.NetworkInterfaceType)));
+            })
+            .Where(candidate => IsUsablePairingAddress(candidate.Address))
+            .OrderBy(candidate => candidate.IsVirtual)
+            .ThenByDescending(candidate => candidate.HasDefaultGateway)
+            .ThenBy(candidate => candidate.InterfacePriority)
+            .ThenBy(candidate => candidate.Address.ToString(), StringComparer.Ordinal)
+            .Select(candidate => $"http://{candidate.Address}:{port}")
+            .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
         return addresses;
     }
+
+    private static bool IsUsablePairingAddress(IPAddress address)
+    {
+        if (address.AddressFamily != AddressFamily.InterNetwork || IPAddress.IsLoopback(address))
+        {
+            return false;
+        }
+
+        var bytes = address.GetAddressBytes();
+        return bytes[0] is not 0 and < 224 &&
+            !(bytes[0] == 169 && bytes[1] == 254) &&
+            !(bytes[0] == 198 && bytes[1] is 18 or 19);
+    }
+
+    private static bool IsVirtualAdapter(NetworkInterface adapter)
+    {
+        var identity = $"{adapter.Name} {adapter.Description}";
+        string[] virtualMarkers =
+        [
+            "virtual", "vmware", "hyper-v", "vethernet", "virtualbox", "wintun",
+            "wireguard", "tailscale", "zerotier", "clash", "meta", "tunnel"
+        ];
+        return virtualMarkers.Any(marker =>
+            identity.Contains(marker, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static int GetInterfacePriority(NetworkInterfaceType type) => type switch
+    {
+        NetworkInterfaceType.Wireless80211 => 0,
+        NetworkInterfaceType.Ethernet or NetworkInterfaceType.GigabitEthernet => 1,
+        NetworkInterfaceType.Ppp => 2,
+        _ => 3
+    };
+
+    private readonly record struct PairingAddressCandidate(
+        IPAddress Address,
+        bool IsVirtual,
+        bool HasDefaultGateway,
+        int InterfacePriority);
 
     private static ProcessStartInfo CreateStartInfo(DesktopSettings settings, string token)
     {

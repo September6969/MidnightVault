@@ -2,6 +2,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
+using Microsoft.UI.Windowing;
 using Windows.Media.Core;
 using Windows.Storage;
 using Windows.System;
@@ -19,8 +20,11 @@ public sealed class PreviewWindow : Window
 
     private PreviewWindow(string title)
     {
-        Title = $"{title} — MidnightVault";
-        AppWindow.Resize(new Windows.Graphics.SizeInt32(1000, 720));
+        Title = $"{title} | MidnightVault";
+        var displayArea = DisplayArea.GetFromWindowId(AppWindow.Id, DisplayAreaFallback.Primary);
+        var width = Math.Min(1000, Math.Max(640, displayArea.WorkArea.Width - 80));
+        var height = Math.Min(720, Math.Max(480, displayArea.WorkArea.Height - 80));
+        AppWindow.Resize(new Windows.Graphics.SizeInt32(width, height));
     }
 
     public static async Task<PreviewWindow?> CreateAsync(string path)
@@ -96,7 +100,7 @@ public sealed class PreviewWindow : Window
         var read = await reader.ReadBlockAsync(buffer.AsMemory());
         var extra = new char[1];
         var truncated = read == buffer.Length && await reader.ReadAsync(extra.AsMemory()) > 0;
-        var suffix = truncated ? "\n\n—— 预览仅显示前 2 MB ——" : "";
+        var suffix = truncated ? "\n\n预览仅显示前 2 MB" : "";
         return new string(buffer, 0, read) + suffix;
     }
 }

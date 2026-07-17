@@ -1,0 +1,145 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "name": "MidnightVault",
+  "version": 1,
+  "breakpoints": {
+    "android": {
+      "compactMax": 599,
+      "mediumMin": 600,
+      "expandedMin": 840
+    },
+    "desktop": {
+      "compactMax": 639,
+      "mediumMin": 640,
+      "expandedMin": 900
+    }
+  },
+  "color": {
+    "accent": {
+      "light": "#006E9C",
+      "dark": "#5BB8E8"
+    },
+    "accentStrong": {
+      "light": "#005478",
+      "dark": "#8CD4F5"
+    },
+    "onAccent": {
+      "light": "#FFFFFF",
+      "dark": "#002F42"
+    },
+    "primaryContainer": {
+      "light": "#C7E7F7",
+      "dark": "#104C68"
+    },
+    "onPrimaryContainer": {
+      "light": "#003548",
+      "dark": "#C7E7F7"
+    },
+    "secondary": {
+      "light": "#4D626D",
+      "dark": "#B4CAD5"
+    },
+    "onSecondary": {
+      "light": "#FFFFFF",
+      "dark": "#20333C"
+    },
+    "background": {
+      "light": "#F7FAFC",
+      "dark": "#07131E"
+    },
+    "surface": {
+      "light": "#FFFFFF",
+      "dark": "#0F1E2A"
+    },
+    "surfaceVariant": {
+      "light": "#E4EDF2",
+      "dark": "#1B2C38"
+    },
+    "textPrimary": {
+      "light": "#182024",
+      "dark": "#DCE4E9"
+    },
+    "textSecondary": {
+      "light": "#404A50",
+      "dark": "#BFC8CE"
+    },
+    "outline": {
+      "light": "#707A80",
+      "dark": "#899299"
+    },
+    "outlineVariant": {
+      "light": "#C0C9CE",
+      "dark": "#40484E"
+    },
+    "success": {
+      "light": "#1B6E3C",
+      "dark": "#74D99A"
+    },
+    "warning": {
+      "light": "#8A5300",
+      "dark": "#FFC56E"
+    },
+    "error": {
+      "light": "#BA1A1A",
+      "dark": "#FFB4AB"
+    },
+    "onError": {
+      "light": "#FFFFFF",
+      "dark": "#690005"
+    }
+  },
+  "spacing": {
+    "xs": 4,
+    "sm": 8,
+    "md": 12,
+    "lg": 16,
+    "xl": 24,
+    "xxl": 32,
+    "desktopPage": 36,
+    "androidCompactPage": 16,
+    "androidExpandedPage": 32
+  },
+  "radius": {
+    "small": 8,
+    "medium": 12,
+    "large": 20
+  },
+  "control": {
+    "desktopHeight": 32,
+    "androidHeight": 48,
+    "androidTouchTarget": 48,
+    "iconSmall": 20,
+    "iconMedium": 24,
+    "iconLarge": 32
+  },
+  "typography": {
+    "pageTitle": 32,
+    "sectionTitle": 20,
+    "body": 14,
+    "metric": 24,
+    "lineHeightRatio": 1.35,
+    "android": {
+      "headlineMedium": { "size": 30, "lineHeight": 38, "weight": "SemiBold" },
+      "headlineSmall": { "size": 24, "lineHeight": 32, "weight": "SemiBold" },
+      "titleLarge": { "size": 22, "lineHeight": 29, "weight": "SemiBold" },
+      "titleMedium": { "size": 17, "lineHeight": 24, "weight": "SemiBold" },
+      "bodyLarge": { "size": 16, "lineHeight": 23, "weight": "Normal" },
+      "bodyMedium": { "size": 14, "lineHeight": 20, "weight": "Normal" },
+      "labelLarge": { "size": 14, "lineHeight": 20, "weight": "SemiBold" }
+    }
+  },
+  "motion": {
+    "fastMs": 120,
+    "normalMs": 220,
+    "slowMs": 320,
+    "standardEasing": "cubic-bezier(0.2, 0, 0, 1)"
+  },
+  "layout": {
+    "desktopContentMaxWidth": 1120,
+    "androidContentMaxWidth": 1040,
+    "androidExpandedSidebarWidth": 232,
+    "androidHeroIllustration": 152,
+    "desktopMinimumWidth": 640,
+    "desktopMinimumHeight": 480
+  }
+}

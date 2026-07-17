@@ -1,19 +1,26 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
+using MidnightVault.Desktop.DesignSystem;
 using MidnightVault.Desktop.Services;
+using MidnightVault.Desktop.Testing;
 
 namespace MidnightVault.Desktop.Pages;
 
 public sealed partial class DashboardPage : Page
 {
+    private DesktopLayoutMode? _layoutMode;
+    private bool? _stackEmptyState;
+
     public DashboardPage()
     {
         InitializeComponent();
-        NextRunText.Text = GetNextRunText();
+        NextRunText.Text = VisualTestOptions.Enabled ? "7月17日 00:00" : GetNextRunText();
     }
 
     private async void DashboardPage_Loaded(object sender, RoutedEventArgs e)
     {
+        if (VisualTestOptions.Enabled) return;
         await RefreshDashboardAsync();
     }
 
@@ -27,8 +34,13 @@ public sealed partial class DashboardPage : Page
 
     private void DashboardPage_SizeChanged(object sender, SizeChangedEventArgs e)
     {
-        bool isCompact = e.NewSize.Width < 900;
-        bool isPhone = e.NewSize.Width < 640;
+        var layoutMode = AdaptiveLayout.Classify(e.NewSize.Width);
+        bool stackEmptyState = e.NewSize.Width < 760;
+        if (_layoutMode == layoutMode && _stackEmptyState == stackEmptyState) return;
+        _layoutMode = layoutMode;
+        _stackEmptyState = stackEmptyState;
+        bool isCompact = layoutMode != DesktopLayoutMode.Expanded;
+        bool isPhone = layoutMode == DesktopLayoutMode.Compact;
 
         DashboardContent.Padding = (Thickness)Application.Current.Resources[
             isPhone
@@ -62,7 +74,6 @@ public sealed partial class DashboardPage : Page
         Grid.SetRow(DriveCard, isCompact ? 2 : 0);
         Grid.SetColumn(DriveCard, isCompact ? 0 : 2);
 
-        bool stackEmptyState = e.NewSize.Width < 760;
         EmptyStateImageColumn.Width = stackEmptyState ? new GridLength(1, GridUnitType.Star) : GridLength.Auto;
         EmptyStateTextColumn.Width = stackEmptyState ? new GridLength(0) : new GridLength(1, GridUnitType.Star);
         Grid.SetRow(EmptyStateImage, 0);
@@ -123,6 +134,15 @@ public sealed partial class DashboardPage : Page
         {
             HeaderActionButton.IsEnabled = true;
         }
+    }
+
+    private void BackupNowAccelerator_Invoked(
+        KeyboardAccelerator sender,
+        KeyboardAcceleratorInvokedEventArgs args)
+    {
+        if (!HeaderActionButton.IsEnabled) return;
+        args.Handled = true;
+        BackupNow_Click(HeaderActionButton, new RoutedEventArgs());
     }
 
     private async Task RefreshDashboardAsync()

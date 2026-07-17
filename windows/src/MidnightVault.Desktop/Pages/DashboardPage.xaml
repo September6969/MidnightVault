@@ -7,7 +7,14 @@
     Loaded="DashboardPage_Loaded"
     SizeChanged="DashboardPage_SizeChanged">
 
-    <Grid>
+    <Page.KeyboardAccelerators>
+        <KeyboardAccelerator
+            Key="B"
+            Modifiers="Control"
+            Invoked="BackupNowAccelerator_Invoked" />
+    </Page.KeyboardAccelerators>
+
+    <Grid AutomationProperties.AutomationId="DashboardPageRoot">
         <ScrollViewer
             x:Name="DashboardScrollViewer"
             HorizontalContentAlignment="Stretch"
@@ -42,6 +49,7 @@
                     <StackPanel Spacing="6">
                         <TextBlock
                             x:Name="PageTitle"
+                            AutomationProperties.HeadingLevel="Level1"
                             Style="{StaticResource MidnightPageTitleStyle}"
                             Text="备份概览" />
                         <TextBlock
@@ -64,6 +72,7 @@
                 <InfoBar
                     x:Name="SetupInfoBar"
                     Grid.Row="1"
+                    AutomationProperties.LiveSetting="Polite"
                     IsClosable="False"
                     IsOpen="True"
                     Message="先选择外接硬盘，再为两台 Android 手机完成配对。完成后即可手动或定时备份。"

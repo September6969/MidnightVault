@@ -29,6 +29,23 @@ if ($useDriveE -or [string]::IsNullOrWhiteSpace($env:ANDROID_SDK_ROOT)) {
     $env:ANDROID_SDK_ROOT = $env:ANDROID_HOME
 }
 
+$java17Home = $env:MIDNIGHTVAULT_JAVA17_HOME
+$portableJavaRoot = Join-Path $toolsRoot 'jdk-17-portable'
+if ([string]::IsNullOrWhiteSpace($java17Home) -and
+    (Test-Path -LiteralPath $portableJavaRoot)) {
+    $java17Home = Get-ChildItem -LiteralPath $portableJavaRoot -Directory |
+        Where-Object { Test-Path -LiteralPath (Join-Path $_.FullName 'bin\java.exe') } |
+        Select-Object -ExpandProperty FullName -First 1
+}
+if (-not [string]::IsNullOrWhiteSpace($java17Home) -and
+    (Test-Path -LiteralPath (Join-Path $java17Home 'bin\java.exe'))) {
+    $env:JAVA_HOME = $java17Home
+    $java17Bin = Join-Path $java17Home 'bin'
+    if ($env:Path -notlike "$java17Bin;*") {
+        $env:Path = "$java17Bin;$env:Path"
+    }
+}
+
 $goBin = Join-Path $toolsRoot 'Go\bin'
 $androidPlatformTools = Join-Path $env:ANDROID_HOME 'platform-tools'
 foreach ($path in @($goBin, $androidPlatformTools)) {

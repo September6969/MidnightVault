@@ -1,12 +1,16 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using MidnightVault.Desktop.DesignSystem;
 using MidnightVault.Desktop.Services;
+using MidnightVault.Desktop.Testing;
 using Windows.Storage.Pickers;
 
 namespace MidnightVault.Desktop.Pages;
 
 public sealed partial class SettingsPage : Page
 {
+    private DesktopLayoutMode? _layoutMode;
+
     public SettingsPage()
     {
         InitializeComponent();
@@ -14,6 +18,7 @@ public sealed partial class SettingsPage : Page
 
     private async void SettingsPage_Loaded(object sender, RoutedEventArgs e)
     {
+        if (VisualTestOptions.Enabled) return;
         var settings = await AppServices.Settings.LoadAsync();
         ControlPlaneUrlBox.Text = settings.ControlPlaneUrl ?? "";
         ControlPlaneStatusText.Text = await AppServices.Credentials.ReadControlTokenAsync() is null
@@ -24,8 +29,11 @@ public sealed partial class SettingsPage : Page
 
     private void SettingsPage_SizeChanged(object sender, SizeChangedEventArgs e)
     {
-        bool isCompact = e.NewSize.Width < 900;
-        bool isPhone = e.NewSize.Width < 640;
+        var layoutMode = AdaptiveLayout.Classify(e.NewSize.Width);
+        if (_layoutMode == layoutMode) return;
+        _layoutMode = layoutMode;
+        bool isCompact = layoutMode != DesktopLayoutMode.Expanded;
+        bool isPhone = layoutMode == DesktopLayoutMode.Compact;
 
         SettingsContent.Padding = (Thickness)Application.Current.Resources[
             isPhone

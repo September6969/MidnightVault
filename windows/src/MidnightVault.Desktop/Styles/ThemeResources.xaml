@@ -3,80 +3,35 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <ResourceDictionary.ThemeDictionaries>
-        <ResourceDictionary x:Key="Light">
-            <SolidColorBrush x:Key="MidnightAccentBrush" Color="#006E9C" />
-            <SolidColorBrush x:Key="MidnightAccentStrongBrush" Color="#005478" />
-            <SolidColorBrush x:Key="MidnightAccentSoftBrush" Color="#14006E9C" />
-            <SolidColorBrush x:Key="MidnightHeroBackgroundBrush" Color="#0F006E9C" />
-            <SolidColorBrush x:Key="MidnightHeroStrokeBrush" Color="#4D006E9C" />
-            <SolidColorBrush x:Key="MidnightOnAccentBrush" Color="#F7FBFD" />
-        </ResourceDictionary>
-        <ResourceDictionary x:Key="Dark">
-            <SolidColorBrush x:Key="MidnightAccentBrush" Color="#5BB8E8" />
-            <SolidColorBrush x:Key="MidnightAccentStrongBrush" Color="#8CD4F5" />
-            <SolidColorBrush x:Key="MidnightAccentSoftBrush" Color="#1F5BB8E8" />
-            <SolidColorBrush x:Key="MidnightHeroBackgroundBrush" Color="#175BB8E8" />
-            <SolidColorBrush x:Key="MidnightHeroStrokeBrush" Color="#665BB8E8" />
-            <SolidColorBrush x:Key="MidnightOnAccentBrush" Color="#07131E" />
-        </ResourceDictionary>
-        <ResourceDictionary x:Key="HighContrast">
-            <SolidColorBrush
-                x:Key="MidnightAccentBrush"
-                Color="{ThemeResource SystemColorHighlightColor}" />
-            <SolidColorBrush
-                x:Key="MidnightAccentStrongBrush"
-                Color="{ThemeResource SystemColorHighlightColor}" />
-            <SolidColorBrush
-                x:Key="MidnightAccentSoftBrush"
-                Color="{ThemeResource SystemColorButtonFaceColor}" />
-            <SolidColorBrush
-                x:Key="MidnightHeroBackgroundBrush"
-                Color="{ThemeResource SystemColorWindowColor}" />
-            <SolidColorBrush
-                x:Key="MidnightHeroStrokeBrush"
-                Color="{ThemeResource SystemColorHighlightColor}" />
-            <SolidColorBrush
-                x:Key="MidnightOnAccentBrush"
-                Color="{ThemeResource SystemColorHighlightTextColor}" />
-        </ResourceDictionary>
-    </ResourceDictionary.ThemeDictionaries>
-
-    <x:Double x:Key="MidnightPageMaxWidth">1120</x:Double>
-    <Thickness x:Key="MidnightPagePadding">36,28,36,40</Thickness>
-    <Thickness x:Key="MidnightCompactPagePadding">24,24,24,36</Thickness>
-    <Thickness x:Key="MidnightPhonePagePadding">20,22,20,32</Thickness>
-    <CornerRadius x:Key="MidnightCardCornerRadius">8</CornerRadius>
-
     <Style x:Key="MidnightPageTitleStyle" TargetType="TextBlock">
         <Setter Property="FontFamily" Value="Segoe UI Variable Display" />
-        <Setter Property="FontSize" Value="32" />
+        <Setter Property="FontSize" Value="{StaticResource MidnightPageTitleFontSize}" />
         <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="TextWrapping" Value="Wrap" />
     </Style>
 
     <Style x:Key="MidnightPageSubtitleStyle" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontSize" Value="{StaticResource MidnightBodyFontSize}" />
         <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
         <Setter Property="TextWrapping" Value="Wrap" />
     </Style>
 
     <Style x:Key="MidnightSectionTitleStyle" TargetType="TextBlock">
         <Setter Property="FontFamily" Value="Segoe UI Variable Display" />
-        <Setter Property="FontSize" Value="20" />
+        <Setter Property="FontSize" Value="{StaticResource MidnightSectionTitleFontSize}" />
         <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="TextWrapping" Value="Wrap" />
     </Style>
 
     <Style x:Key="MidnightMetricValueStyle" TargetType="TextBlock">
         <Setter Property="FontFamily" Value="Segoe UI Variable Display" />
-        <Setter Property="FontSize" Value="24" />
+        <Setter Property="FontSize" Value="{StaticResource MidnightMetricFontSize}" />
         <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="TextWrapping" Value="Wrap" />
     </Style>
 
     <Style x:Key="MidnightSecondaryTextStyle" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontSize" Value="{StaticResource MidnightBodyFontSize}" />
         <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
         <Setter Property="TextWrapping" Value="Wrap" />
     </Style>

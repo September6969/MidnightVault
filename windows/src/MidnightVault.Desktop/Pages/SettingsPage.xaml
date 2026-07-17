@@ -7,7 +7,7 @@
     Loaded="SettingsPage_Loaded"
     SizeChanged="SettingsPage_SizeChanged">
 
-    <Grid>
+    <Grid AutomationProperties.AutomationId="SettingsPageRoot">
         <ScrollViewer
             x:Name="SettingsScrollViewer"
             HorizontalContentAlignment="Stretch"
@@ -33,6 +33,7 @@
                 <StackPanel Spacing="6">
                     <TextBlock
                         x:Name="PageTitle"
+                        AutomationProperties.HeadingLevel="Level1"
                         Style="{StaticResource MidnightPageTitleStyle}"
                         Text="设置" />
                     <TextBlock
@@ -43,6 +44,7 @@
                 <InfoBar
                     x:Name="SettingsInfoBar"
                     Grid.Row="1"
+                    AutomationProperties.LiveSetting="Polite"
                     IsClosable="True"
                     IsOpen="False"
                     Severity="Informational" />

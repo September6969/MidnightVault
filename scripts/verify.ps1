@@ -54,9 +54,25 @@ try {
 
 $gradleWrapper = Join-Path $repositoryRoot 'android\gradlew.bat'
 if ((Test-Path -LiteralPath $gradleWrapper) -and (Test-Path -LiteralPath $env:ANDROID_HOME)) {
+    $previousErrorActionPreference = $ErrorActionPreference
+    try {
+        $ErrorActionPreference = 'Continue'
+        $javaVersionOutput = (& java -version 2>&1) -join "`n"
+        $javaVersionExitCode = $LASTEXITCODE
+    } finally {
+        $ErrorActionPreference = $previousErrorActionPreference
+    }
+    if ($javaVersionExitCode -ne 0 -or $javaVersionOutput -notmatch 'version "17[\."]') {
+        throw 'Android screenshot verification requires JDK 17. Set MIDNIGHTVAULT_JAVA17_HOME or JAVA_HOME.'
+    }
     Push-Location (Join-Path $repositoryRoot 'android')
     try {
-        Invoke-CheckedCommand $gradleWrapper @('lint', 'test', 'assembleDebug')
+        Invoke-CheckedCommand $gradleWrapper @(
+            'lint',
+            'test',
+            'assembleDebug',
+            'validateDebugScreenshotTest'
+        )
     } finally {
         Pop-Location
     }
@@ -74,5 +90,7 @@ if (Get-Command npx -ErrorAction SilentlyContinue) {
 } else {
     Write-Warning 'npx is unavailable; OpenAPI lint was skipped.'
 }
+
+& (Join-Path $repositoryRoot 'scripts\capture-winui-visuals.ps1')
 
 Write-Host 'MidnightVault verification completed.'

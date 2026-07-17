@@ -18,6 +18,18 @@ jobs:
       - uses: actions/setup-dotnet@v5
         with:
           dotnet-version: 10.0.x
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-provider: basic
+      - name: Install Android screenshot SDK
+        shell: pwsh
+        run: >-
+          & "$env:ANDROID_HOME\cmdline-tools\latest\bin\sdkmanager.bat"
+          "platforms;android-37.0" "build-tools;36.0.0"
       - name: Test core
         run: dotnet test windows/tests/MidnightVault.Core.Tests/MidnightVault.Core.Tests.csproj --configuration Release
       - name: Test receiver
@@ -26,6 +38,9 @@ jobs:
         run: dotnet build windows/src/MidnightVault.Receiver/MidnightVault.Receiver.csproj --configuration Release
       - name: Build WinUI client
         run: dotnet build windows/src/MidnightVault.Desktop/MidnightVault.Desktop.csproj --configuration Release -p:Platform=x64
+      - name: Validate Android screenshot baselines
+        working-directory: android
+        run: .\gradlew.bat :app:validateDebugScreenshotTest --stacktrace
       - name: Audit NuGet packages
         shell: pwsh
         run: |

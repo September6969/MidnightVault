@@ -5,11 +5,36 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     Loaded="MainPage_Loaded">
 
+    <Page.KeyboardAccelerators>
+        <KeyboardAccelerator
+            Key="Number1"
+            Modifiers="Control"
+            Invoked="DashboardAccelerator_Invoked" />
+        <KeyboardAccelerator
+            Key="Number2"
+            Modifiers="Control"
+            Invoked="LibraryAccelerator_Invoked" />
+        <KeyboardAccelerator
+            Key="Number3"
+            Modifiers="Control"
+            Invoked="DevicesAccelerator_Invoked" />
+        <KeyboardAccelerator
+            Key="Number4"
+            Modifiers="Control"
+            Invoked="SettingsAccelerator_Invoked" />
+        <KeyboardAccelerator
+            Key="Escape"
+            Invoked="EscapeAccelerator_Invoked" />
+    </Page.KeyboardAccelerators>
+
     <NavigationView
         x:Name="ShellNavigationView"
         AlwaysShowHeader="False"
+        AutomationProperties.AutomationId="AppShell"
         AutomationProperties.Name="主导航"
+        CompactModeThresholdWidth="{StaticResource MidnightCompactBreakpoint}"
         CompactPaneLength="48"
+        ExpandedModeThresholdWidth="{StaticResource MidnightExpandedBreakpoint}"
         IsBackButtonVisible="Collapsed"
         IsSettingsVisible="False"
         OpenPaneLength="236"
@@ -19,22 +44,35 @@
             <NavigationViewItem
                 x:Name="DashboardNavigationItem"
                 Content="概览"
-                Tag="dashboard">
+                Tag="dashboard"
+                ToolTipService.ToolTip="概览（Ctrl+1）">
                 <NavigationViewItem.Icon>
                     <FontIcon Glyph="&#xE80F;" />
                 </NavigationViewItem.Icon>
             </NavigationViewItem>
-            <NavigationViewItem Content="资料库" Tag="library">
+            <NavigationViewItem
+                x:Name="LibraryNavigationItem"
+                Content="资料库"
+                Tag="library"
+                ToolTipService.ToolTip="资料库（Ctrl+2）">
                 <NavigationViewItem.Icon>
                     <FontIcon Glyph="&#xE8B9;" />
                 </NavigationViewItem.Icon>
             </NavigationViewItem>
-            <NavigationViewItem Content="设备" Tag="devices">
+            <NavigationViewItem
+                x:Name="DevicesNavigationItem"
+                Content="设备"
+                Tag="devices"
+                ToolTipService.ToolTip="设备（Ctrl+3）">
                 <NavigationViewItem.Icon>
                     <FontIcon Glyph="&#xE8EA;" />
                 </NavigationViewItem.Icon>
             </NavigationViewItem>
-            <NavigationViewItem Content="设置" Tag="settings">
+            <NavigationViewItem
+                x:Name="SettingsNavigationItem"
+                Content="设置"
+                Tag="settings"
+                ToolTipService.ToolTip="设置（Ctrl+4）">
                 <NavigationViewItem.Icon>
                     <FontIcon Glyph="&#xE713;" />
                 </NavigationViewItem.Icon>

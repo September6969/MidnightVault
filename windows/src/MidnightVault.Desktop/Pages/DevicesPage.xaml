@@ -7,7 +7,11 @@
     Loaded="DevicesPage_Loaded"
     SizeChanged="DevicesPage_SizeChanged">
 
-    <Grid>
+    <Page.KeyboardAccelerators>
+        <KeyboardAccelerator Key="Escape" Invoked="CancelPairing_Invoked" />
+    </Page.KeyboardAccelerators>
+
+    <Grid AutomationProperties.AutomationId="DevicesPageRoot">
         <ScrollViewer
             x:Name="DevicesScrollViewer"
             HorizontalContentAlignment="Stretch"
@@ -41,6 +45,7 @@
                     <StackPanel Spacing="6">
                         <TextBlock
                             x:Name="PageTitle"
+                            AutomationProperties.HeadingLevel="Level1"
                             Style="{StaticResource MidnightPageTitleStyle}"
                             Text="设备" />
                         <TextBlock
@@ -62,6 +67,7 @@
                 <InfoBar
                     x:Name="PairingInfoBar"
                     Grid.Row="1"
+                    AutomationProperties.LiveSetting="Polite"
                     IsClosable="True"
                     IsOpen="False"
                     Severity="Informational" />
@@ -110,6 +116,21 @@
                                     Foreground="{ThemeResource MidnightAccentStrongBrush}"
                                     Text="最多 2 台设备，每台默认 1 个上传流" />
                             </Border>
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <ProgressRing
+                                    x:Name="PairingProgressRing"
+                                    Width="22"
+                                    Height="22"
+                                    AutomationProperties.Name="正在等待手机完成配对"
+                                    IsActive="False"
+                                    Visibility="Collapsed" />
+                                <Button
+                                    x:Name="CancelPairingButton"
+                                    AutomationProperties.HelpText="停止本机等待并从界面移除当前二维码"
+                                    Click="CancelPairing_Click"
+                                    Content="取消等待"
+                                    Visibility="Collapsed" />
+                            </StackPanel>
                         </StackPanel>
                     </Grid>
                 </Border>
@@ -123,6 +144,7 @@
                     <Border Style="{StaticResource MidnightCardStyle}">
                         <Grid x:Name="DeviceSlotOneGrid" ColumnSpacing="16" RowSpacing="8">
                             <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
@@ -174,6 +196,7 @@
                     <Border Style="{StaticResource MidnightCardStyle}">
                         <Grid x:Name="DeviceSlotTwoGrid" ColumnSpacing="16" RowSpacing="8">
                             <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>

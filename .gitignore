@@ -18,3 +18,4 @@ server/dist/
 *.keystore
 .env
 appsettings.Local.json
+/artifacts/ui-regression/

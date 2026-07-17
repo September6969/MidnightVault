@@ -16,6 +16,9 @@ public partial class App : Application
     {
         MainWindow = new MainWindow();
         MainWindow.Activate();
-        _ = AppServices.ReceiverProcess.EnsureRunningAsync();
+        if (!Testing.VisualTestOptions.Enabled)
+        {
+            _ = AppServices.ReceiverProcess.EnsureRunningAsync();
+        }
     }
 }

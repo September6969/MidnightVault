@@ -6,7 +6,15 @@
     Loaded="LibraryPage_Loaded"
     SizeChanged="LibraryPage_SizeChanged">
 
-    <Grid>
+    <Page.KeyboardAccelerators>
+        <KeyboardAccelerator
+            Key="F"
+            Modifiers="Control"
+            Invoked="FocusSearch_Invoked" />
+        <KeyboardAccelerator Key="F5" Invoked="RefreshAccelerator_Invoked" />
+    </Page.KeyboardAccelerators>
+
+    <Grid AutomationProperties.AutomationId="LibraryPageRoot">
         <ScrollViewer
             x:Name="LibraryScrollViewer"
             HorizontalContentAlignment="Stretch"
@@ -29,6 +37,7 @@
                 <StackPanel Spacing="6">
                     <TextBlock
                         x:Name="PageTitle"
+                        AutomationProperties.HeadingLevel="Level1"
                         Style="{StaticResource MidnightPageTitleStyle}"
                         Text="资料库" />
                     <TextBlock
@@ -49,6 +58,7 @@
 
                     <AutoSuggestBox
                         x:Name="SearchBox"
+                        AutomationProperties.AutomationId="LibrarySearchBox"
                         AutomationProperties.Name="搜索资料库"
                         IsEnabled="False"
                         PlaceholderText="搜索文件名或原始路径"
@@ -87,8 +97,18 @@
                 <StackPanel Grid.Row="2" Spacing="12">
                     <InfoBar
                         x:Name="LibraryInfoBar"
+                        AutomationProperties.LiveSetting="Polite"
                         IsClosable="True"
                         IsOpen="False" />
+
+                    <ProgressRing
+                        x:Name="LibraryLoadingIndicator"
+                        Width="24"
+                        Height="24"
+                        HorizontalAlignment="Left"
+                        AutomationProperties.Name="正在更新资料库"
+                        IsActive="False"
+                        Visibility="Collapsed" />
 
                     <Grid>
                         <Border
@@ -148,12 +168,43 @@
                             <TextBlock
                                 x:Name="ResultCountText"
                                 Style="{StaticResource MidnightSecondaryTextStyle}" />
-                            <ItemsControl x:Name="LibraryItemsControl">
-                                <ItemsControl.ItemTemplate>
+                            <ItemsRepeater x:Name="LibraryItemsRepeater">
+                                <ItemsRepeater.ItemTemplate>
                                     <DataTemplate>
                                         <Border
                                             Margin="0,0,0,10"
+                                            DoubleTapped="LibraryItem_DoubleTapped"
+                                            Tag="{Binding}"
                                             Style="{StaticResource MidnightCardStyle}">
+                                            <Border.ContextFlyout>
+                                                <MenuFlyout>
+                                                    <MenuFlyoutItem
+                                                        Click="PreviewFile_Click"
+                                                        Tag="{Binding}"
+                                                        Text="预览">
+                                                        <MenuFlyoutItem.Icon>
+                                                            <FontIcon Glyph="&#xE890;" />
+                                                        </MenuFlyoutItem.Icon>
+                                                    </MenuFlyoutItem>
+                                                    <MenuFlyoutItem
+                                                        Click="OpenInExplorer_Click"
+                                                        Tag="{Binding}"
+                                                        Text="在资源管理器中显示">
+                                                        <MenuFlyoutItem.Icon>
+                                                            <FontIcon Glyph="&#xE838;" />
+                                                        </MenuFlyoutItem.Icon>
+                                                    </MenuFlyoutItem>
+                                                    <MenuFlyoutSeparator />
+                                                    <MenuFlyoutItem
+                                                        Click="CopyOriginalPath_Click"
+                                                        Tag="{Binding}"
+                                                        Text="复制原始路径">
+                                                        <MenuFlyoutItem.Icon>
+                                                            <FontIcon Glyph="&#xE8C8;" />
+                                                        </MenuFlyoutItem.Icon>
+                                                    </MenuFlyoutItem>
+                                                </MenuFlyout>
+                                            </Border.ContextFlyout>
                                             <Grid ColumnSpacing="14">
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="Auto" />
@@ -182,18 +233,39 @@
                                                         Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                                         Text="{Binding Detail}" />
                                                 </StackPanel>
-                                                <Button
+                                                <StackPanel
                                                     Grid.Column="2"
                                                     VerticalAlignment="Center"
-                                                    AutomationProperties.Name="预览文件"
-                                                    Click="PreviewFile_Click"
-                                                    Content="预览"
-                                                    Tag="{Binding}" />
+                                                    Orientation="Horizontal"
+                                                    Spacing="6">
+                                                    <Button
+                                                        AutomationProperties.Name="预览文件"
+                                                        Click="PreviewFile_Click"
+                                                        Content="预览"
+                                                        Tag="{Binding}"
+                                                        ToolTipService.ToolTip="双击或按此按钮预览文件" />
+                                                    <DropDownButton
+                                                        AutomationProperties.Name="更多文件操作"
+                                                        Content="更多">
+                                                        <DropDownButton.Flyout>
+                                                            <MenuFlyout>
+                                                                <MenuFlyoutItem
+                                                                    Click="OpenInExplorer_Click"
+                                                                    Tag="{Binding}"
+                                                                    Text="在资源管理器中显示" />
+                                                                <MenuFlyoutItem
+                                                                    Click="CopyOriginalPath_Click"
+                                                                    Tag="{Binding}"
+                                                                    Text="复制原始路径" />
+                                                            </MenuFlyout>
+                                                        </DropDownButton.Flyout>
+                                                    </DropDownButton>
+                                                </StackPanel>
                                             </Grid>
                                         </Border>
                                     </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
+                                </ItemsRepeater.ItemTemplate>
+                            </ItemsRepeater>
                         </StackPanel>
                     </Grid>
                 </StackPanel>

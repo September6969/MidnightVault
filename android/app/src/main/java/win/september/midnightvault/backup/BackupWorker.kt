@@ -3,6 +3,7 @@ package win.september.midnightvault.backup
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
+import android.content.pm.ServiceInfo
 import androidx.core.app.NotificationCompat
 import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
@@ -85,14 +86,18 @@ class BackupWorker(
         )
 
         val notification = NotificationCompat.Builder(applicationContext, channelId)
-            .setSmallIcon(android.R.drawable.stat_sys_upload)
+            .setSmallIcon(R.drawable.ic_notification_backup)
             .setContentTitle(applicationContext.getString(R.string.backup_notification_title))
             .setContentText(text)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .build()
 
-        return ForegroundInfo(2001, notification)
+        return ForegroundInfo(
+            2001,
+            notification,
+            ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
+        )
     }
 
     private fun showResultNotification(text: String, successful: Boolean) {
@@ -106,10 +111,7 @@ class BackupWorker(
             )
         )
         val notification = NotificationCompat.Builder(applicationContext, channelId)
-            .setSmallIcon(
-                if (successful) android.R.drawable.stat_sys_upload_done
-                else android.R.drawable.stat_notify_error
-            )
+            .setSmallIcon(R.drawable.ic_notification_backup)
             .setContentTitle(
                 applicationContext.getString(
                     if (successful) R.string.backup_result_success
