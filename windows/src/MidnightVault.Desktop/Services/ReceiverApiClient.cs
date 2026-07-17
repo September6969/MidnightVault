@@ -1,6 +1,7 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using MidnightVault.Core.Storage;
 
 namespace MidnightVault.Desktop.Services;
 
@@ -86,7 +87,7 @@ public sealed class ReceiverApiClient(
 
         var root = Path.GetFullPath(settings.BackupRootPath);
         var localPath = Path.GetFullPath(Path.Combine(root, item.RelativeStoredPath));
-        if (!localPath.StartsWith(root + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+        if (!StoragePathGuard.IsContainedBy(root, localPath))
         {
             throw new UnauthorizedAccessException("资料库路径越过了备份根目录。");
         }

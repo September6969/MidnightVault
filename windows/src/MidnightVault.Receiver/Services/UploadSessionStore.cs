@@ -279,7 +279,7 @@ public sealed class UploadSessionStore(
 
         var stagingRoot = Path.GetFullPath(Path.Combine(_options.RootPath, ".midnight-vault", "staging"));
         var sessionDirectory = Path.GetFullPath(Path.Combine(stagingRoot, uploadId));
-        if (!sessionDirectory.StartsWith(stagingRoot + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+        if (!StoragePathGuard.IsContainedBy(stagingRoot, sessionDirectory))
         {
             throw new UnauthorizedAccessException("上传任务路径无效。 ");
         }

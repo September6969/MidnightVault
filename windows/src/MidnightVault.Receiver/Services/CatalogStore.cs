@@ -1,6 +1,7 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Options;
 using MidnightVault.Core.Models;
+using MidnightVault.Core.Storage;
 using MidnightVault.Receiver.Contracts;
 
 namespace MidnightVault.Receiver.Services;
@@ -362,7 +363,7 @@ public sealed class CatalogStore(IOptions<ReceiverOptions> options)
     {
         var root = Path.GetFullPath(_options.RootPath);
         var candidate = Path.GetFullPath(Path.Combine(root, item.RelativeStoredPath));
-        if (!candidate.StartsWith(root + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+        if (!StoragePathGuard.IsContainedBy(root, candidate))
         {
             throw new UnauthorizedAccessException("索引中的文件路径越过了备份根目录。");
         }
