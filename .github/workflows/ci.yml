@@ -14,7 +14,7 @@ jobs:
     name: Windows (.NET 10 / WinUI 3)
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-dotnet@v5
         with:
           dotnet-version: 10.0.x
@@ -54,7 +54,7 @@ jobs:
     name: Android
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
@@ -81,7 +81,7 @@ jobs:
     name: Termux control plane
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-go@v6
         with:
           go-version-file: server/go.mod
@@ -109,6 +109,6 @@ jobs:
     name: OpenAPI
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Lint OpenAPI contract
         run: npx --yes @redocly/cli@latest lint protocol/openapi.yaml
